@@ -1,0 +1,818 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <title>Messaging</title>
+
+  <style type="text/css" media="screen,print">@import url("docs.css");</style>
+<META http-equiv=Content-Type content="text/html; charset=utf-8"></head>
+
+<body>
+<div><a name="top"></a></div>
+
+<div id="header">
+<table cellpadding="0" cellspacing="0" border="0" style="width:100%;"><tr>
+<td class="docheading" style="width:300px;"><h1 style="font-size: 18px; font-weight: bold;">intoEEtive.com</h1></td>
+<td class="searchbox">
+
+</td>
+</tr>
+</table>
+</div>
+
+
+<div id="navlinks">
+<a href="http://www.intoeetive.com/">intoEEtive.com</a> &gt;
+<a href="http://www.intoeetive.com/index.php/category/extending_ee">EE add-ons</a> &gt;
+<a href="http://www.intoeetive.com/index.php/comments/messaging">Messaging</a>
+</div>
+
+
+<div id="content">
+
+	<h1>Messaging</h1>
+
+	<p>Messaging is the module for ExpressioEngine 2 that brings all power of Private Messages, Bulletins (public messages) and Buddies/Blocked lists to frontent templates - even with AJAX support!</p>
+    
+   	<ul>		
+        
+        <li><a href="#basic">Basic concepts</a></li>
+        <li><a href="#bulletin">Bulletins</a>
+            <ul>
+            <li><a href="#bulletin-compose">Compose Bulletin</a></li>
+            <li><a href="#bulletin-message">View Bulletins</a></li>
+            </ul>
+        </li>
+        <li><a href="#pm">Private Messages</a>
+            <ul>
+            <li><a href="#pm-compose">Compose PM</a></li>
+            <li><a href="#pm-list">View messages in folder</a></li>   
+			<li><a href="#pm-thread">View messages in conversation mode</a></li>           
+            <li><a href="#pm-message">View PM</a></li>
+            <li><a href="#pm-move">Moving and deleting messages</a></li>
+            <li><a href="#pm-author">Message author</a></li>
+            <li><a href="#pm-folders">Message folders list</a></li>
+            <li><a href="#pm-folderedit">Editing folders</a></li>
+            <li><a href="#pm-info">Member's general PM info</a></li>
+            </ul>
+        </li>
+        <li><a href="#list">Member lists</a>
+            <ul>
+            <li><a href="#list-buddies">Buddies list</a></li>
+            <li><a href="#list-blocked">Blocked list</a></li>
+            <li><a href="#list-add">Adding to list</a></li>
+            <li><a href="#list-remove">Removing from list</a></li>
+            <li><a href="#list-state">Check buddy/blocked state</a></li>
+            </ul>
+        </li>
+        <li><a href="#hooks">Extension hooks</a></li>
+        
+	</ul>
+
+	<h2><a name="basic" href="#top">&uarr;</a> Basic concepts</h2>
+
+<p>Here are some Basic concepts regaring messaging in ExpressionEngine.</p>
+<p><strong>Private Messages</strong> are similar to being able to send another user an email. In this case, though, they access the Private Message through the EE website and not with an email program.</p>
+<p>You are able to send Private Messages (PM) to one or several site members, add attachments, reply, forward. PMs can be organized in <strong>folders</strong>.</p>
+<p>Unlike Private Messages, <strong>Bulletins</strong> do not get sent to each sender, but rather are viewable by all members of the member group(s) designated as recipients. Additionally, Bulletins can have an expiration date, making them ideal for mass communication of time-sensitive information. You can think of bulletins as Public messages.</p>
+<p>You may organize site members that you communicate with into Buddies List and Blocked List. You may think of <strong>Buddies List</strong> as list of people you follow (or simply use it for easy access to selected profiles). <strong>Blocked List</strong> is the list of members from which you will not accept Private Messages.</p>
+
+	<h2><a name="bulletin" href="#top">&uarr;</a>Bulletins</h2>
+
+	<h3><a name="bulletin-compose" href="#top">&uarr;</a>Compose Bulletin</h3>
+
+
+<code>
+{exp:messaging:bulletin_compose}<br />
+&lt;p&gt;Recipients:<br />
+{recipients}<br />
+&lt;br /&gt;&lt;input type="checkbox" name="recipients[]" value="{recipient_id}" /&gt; {recipient_name}<br />
+{/recipients}<br />
+&lt;/p&gt;<br />
+&lt;p&gt;Expire this bulletin on:<br />
+&lt;br /&gt;&lt;input type="text" name="bulletin_expires" value="{current_time format="%Y-%m-%d %H:%i:%s"}" /&gt;<br />
+&lt;/p&gt;<br />
+&lt;p&gt;Message text:<br />
+&lt;br /&gt;&lt;textarea name="message"&gt;&lt;/textarea&gt;<br />
+&lt;/p&gt;<br />
+&lt;p&gt;&lt;input type="submit" value="send" /&gt;&lt;/p&gt;<br />
+{/exp:messaging:bulletin_compose}
+</code>
+
+<p><strong>{exp:messaging:bulletin_compose}</strong> tag will generate the form used to compose bulletin message.</p>
+<p><strong>Form fields</strong>:
+<ul>
+<li><dfn>recipients</dfn> &mdash; IDs or recipient member groups. You can let senders select one or several group (in last case, the field should ba named <dfn>recipients[]</dfn>). Mandatory</li>
+<li><dfn>message</dfn> &mdash; message text. Mandatory.</li>
+<li><dfn>bulletin_expires</dfn> &mdash; the date and time when the bulletin will be expired (and not shown to recipients anymore). Optional (if omited, message will expire in 30 days).</li>
+</ul>
+</p>
+<p><strong>Form tag parameters:</strong>
+<ul>
+<li><dfn>return</dfn> &mdash; a page to return after sending message. Can be a full URL or URI segments.<br />Use <em>return="SAME_PAGE"</em> to return user to the page used to display form.</li>
+<li><dfn>skip_success_message="yes"</dfn> &mdash; force redirect to return page without showing success message.</li>
+<li><dfn>ajax="yes"</dfn> &mdash; turn on AJAX mode. The success or error messages shown upon submission will be shown as simple text, without using message templates. The "return" parameter will not be functional if you supply this parameter.</li>
+<li><dfn>silent="yes"</dfn> &mdash; turn on "silent" mode. Will not show error page when the user has no permission to send bulletin messages, but will output the code surrounded with {if no_results}{/if} tags.</li>
+<li><dfn>id</dfn> &mdash; form ID (defaults to 'messaging_form')</li>
+<li><dfn>class</dfn> &mdash; form class (defaults to 'messaging_form')</li>
+<li><dfn>name</dfn> &mdash; form name (defaults to 'messaging_form')</li>
+</ul>
+</p>
+
+	<h3><a name="bulletin-message" href="#top">&uarr;</a>View Bulletins</h3>
+
+
+<code>
+{exp:messaging:bulletins}<br />
+&lt;div id="bulletin_{message_id}"&gt;<br />
+Message from &lt;a href="{path=member/profile/{sender_member_id}}"&gt;{sender_screen_name}&lt;/a&gt; ({message_date format="%Y-%m-%d"}<br />
+&lt;hr /&gt;<br />
+{message}<br />
+&lt;/div&gt;<br />
+{/exp:messaging:bulletins}
+</code>
+
+<p><strong>{exp:messaging:bulletins}</strong> tag will display all or certain bulletin message for logged in user.</p>
+
+<p><strong>Tag parameters (all optional):</strong>
+<ul>
+<li><dfn>message_id</dfn> &mdash; bulletin message ID, if you want to limit view to certain message</li>
+<li><dfn>show_expired="yes"</dfn> &mdash; display also expired messages (by default expired message are not dispalyed)</li>
+<li><dfn>only_new="yes"</dfn> &mdash; display only new bulletins, that the user has never seen</li>
+<li><dfn>limit</dfn> &mdash; number of bulletins per page (if you have many messages and want to use pagination)</li>
+<li><dfn>paginate</dfn> &mdash; place to display pagination links. Can be 'top', 'bottom' or 'both'. Defaults to 'bottom'</li>
+<li><dfn>backspace="X"</dfn> &mdash; remove X last characters from tag output result</li>
+<li><dfn>ajax="yes"</dfn> &mdash; turn on AJAX mode for delete_link. The success or error messages shown upon clicking delete_link will be shown as simple text, without using message templates.</li>
+</ul>
+</p>
+
+<p><strong>Conditional variables:</strong>
+<ul>
+<li><dfn>{if no_results}{/if}</dfn> &mdash; displayed if there are no messages available</li>
+<li><dfn>{if can_delete}{/if}</dfn> &mdash; displayed if user has permissions to delete this bulletin (is sender or admin). Deleting the bulletin will completely remove it from the system.</li>
+</ul>
+</p>
+
+<p><strong>Single variables:</strong>
+<ul>
+<li><dfn>total_results</dfn> &mdash; total number of bulletin messages available for user</li>
+<li><dfn>count</dfn> &mdash; message counter on each page</li>
+<li><dfn>absolute_count</dfn> &mdash; message counter throughout all pages</li>
+<li><dfn>message_id</dfn> &mdash; bulletin message ID</li>
+<li><dfn>sender_member_id</dfn> &mdash; member ID of person who sent the message</li>
+<li><dfn>sender_username</dfn> &mdash; username of person who sent the message</li>
+<li><dfn>sender_screen_name</dfn> &mdash; screen name of person who sent the message</li>
+<li><dfn>sender_email</dfn> &mdash; email of sender</li>
+<li><dfn>sender_avatar_url</dfn> &mdash; URL of sender's avatar</li>
+<li><dfn>sender_photo_url</dfn> &mdash; URL of sender's profile photo</li>
+<li><dfn>message</dfn> &mdash; message text</li>
+<li><dfn>message_date format="%Y-%m-%d"</dfn> &mdash; the date when message has been sent. Standard EE date formatting rules apply.</li>
+<li><dfn>delete_link</dfn> &mdash; pre-formatted link to delete message (shown only if user has permissions)</li>
+<li><dfn>{paginate}{pagination_links}{/paginate}</dfn> &mdash; pagination links (if you have limit parameter set and there's more than one page)</li>
+</ul>
+</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<h2><a name="pm" href="#top">&uarr;</a>Private Messages</h2>
+
+	<h3><a name="pm-compose" href="#top">&uarr;</a>Compose PM</h3>
+
+<code>
+{exp:messaging:pm_compose save_sent="yes"}<br />
+{if warning}<br />
+&lt;div class="warning"&gt;{warning}&lt;/div&gt;<br />
+{/if}<br />
+&lt;p&gt;Recipient:<br />
+&lt;br /&gt;&lt;input type="text" name="recipients" value="{recipient_from_url}" /&gt;<br />
+&lt;/p&gt;<br />
+&lt;p&gt;Subject:<br />
+&lt;br /&gt;&lt;input type="text" name="subject" value="{subject}" /&gt;<br />
+&lt;/p&gt;<br />
+&lt;p&gt;Message text:<br />
+&lt;br /&gt;&lt;textarea name="message"&gt;{message}&lt;/textarea&gt;<br />
+&lt;/p&gt;<br />
+{if attachments_allowed}<br />
+&lt;p&gt;Attachments:<br />
+&lt;br /&gt;&lt;input type="file" name="attachment[]" /&gt;<br />
+&lt;br /&gt;&lt;input type="file" name="attachment[]" /&gt;<br />
+&lt;br /&gt;&lt;input type="file" name="attachment[]" /&gt;<br />
+&lt;/p&gt;<br />
+{/if}<br />
+&lt;p&gt;&lt;input type="submit" value="send" /&gt;&lt;/p&gt;<br />
+{/exp:messaging:pm_compose}
+</code>    
+    
+<p><strong>{exp:messaging:pm_compose}</strong> is the tag that generates form used for composing the message (and also for replying and forwarding)</p>    
+<p>In there has been non-critical error after submiting the form (the user has permissions to send the message, but it cannot be delivered for some reason, e.g. recipient is invalid) the error message will not be shown, but the user will be redirected back to message composing page with warning message displayed. Previously entered data will be available in corresponding variables.</p>
+
+<p><strong>Form fields</strong>:
+<ul>
+<li><dfn>recipients</dfn> &mdash; Screen names (not usernames!) or recipient members. Separate multiple recipients with comma. Mandatory.</li>
+<li><dfn>cc</dfn> &mdash; Screen names (not usernames!) or members whom you want to send copy of message. Optional.</li>
+<li><dfn>subject</dfn> &mdash; message subject. Mandatory.</li>
+<li><dfn>message</dfn> &mdash; message body. Mandatory.</li>
+<li><dfn>attachment</dfn> &mdash; input for file you want to attach. You can place multiple attachment fields (in this case, the fields should ba named <dfn>attachment[]</dfn>) - but make sure not more than number of files allowed to attach set in PM preferences. Optional.</li>
+<li><dfn>forward_attachments[]</dfn> &mdash; if you are forwaring message, you can use this fiels by marking checkboxes for attachments you want to forward together with the message. Must be used inside {attachments} variable pair. Optional.</li>
+</ul>
+</p>
+<p><strong>Form tag parameters:</strong>
+<ul>
+<li><dfn>replying</dfn> &mdash; If you are replying to message, set the value of this parameter to ID of message you're replying to, e.g. replying="143". It will mark the original message in your list as 'replied'. In order to get screen name of original message author (and use as recipient) use <a href="#pm-author">{exp:messaging:author}</a> tag</li>
+<li><dfn>forwarding</dfn> &mdash; If you are forwarding some message, set the value of this parameter to ID of message you're forwarding, e.g. forwarding="143". It will mark the original message in your list as 'forwarded'.</li>
+<li><dfn>save_sent="yes"</dfn> &mdash; Save message copy in 'Sent' folder.</li>
+<li><dfn>hide_cc="yes"</dfn> &mdash; setting this will hide recipients listed in <em>cc</em> field, thus making in fuction as blind copy field (bcc)</li>
+<li><dfn>return</dfn> &mdash; a page to return after sending message. Can be a full URL or URI segments.<br />Use <em>return="SAME_PAGE"</em> to return user to the page used to display form.</li>
+<li><dfn>skip_success_message="yes"</dfn> &mdash; force redirect to return page without showing success message.</li>
+<li><dfn>ajax="yes"</dfn> &mdash; turn on AJAX mode. The success or error messages shown upon submission will be shown as simple text, without using message templates. The "return" parameter will not be functional if you supply this parameter.</li>
+<li><dfn>silent="yes"</dfn> &mdash; turn on "silent" mode. Will not show error page when the user has no permission to send bulletin messages, but will output the code surrounded with {if no_results}{/if} tags.</li>
+<li><dfn>id</dfn> &mdash; form ID (defaults to 'messaging_form')</li>
+<li><dfn>class</dfn> &mdash; form class (defaults to 'messaging_form')</li>
+<li><dfn>name</dfn> &mdash; form name (defaults to 'messaging_form')</li>
+</ul>
+</p>
+
+
+<p><strong>Conditional variables:</strong>
+<ul>
+<li><dfn>{if attachments_allowed}{/if}</dfn> &mdash; displayed if user has permissions to add attachment files to the message.</li>
+<li><dfn>{if attachments}{/if}</dfn> &mdash; displayed if this is message forwaring and orginal message has attachments.</li>
+<li><dfn>{if warning}{/if}</dfn> &mdash; displayed if the message has not been sent but user has been redirected back to composing page with warning message</li>
+<li><dfn>{if recipient_from_url}{/if}</dfn> &mdash; displayed if system is able to find out recipient by ID or username specified in URL</li>
+
+</ul>
+</p>
+
+<p><strong>Single variables:</strong>
+<ul>
+<li><dfn>warning</dfn> &mdash; pre-formatted warning message</li>
+<li><dfn>subject</dfn> &mdash; saved subject, if warning has been returned and message not sent. If the form is for forwarding or replying, contains subject of original message, prefixed with Fwd: or Re:</li>
+<li><dfn>message</dfn> &mdash; saved message text, if warning has been returned and message not sent. If the form is for forwarding or replying, contains message body of original message, surrounded with [quote]</li>
+<li><dfn>recipient_from_url</dfn> &mdash; if the last segment of URL is valid username or member ID, this variable will contain screen name of member corresponding to that segment (can be used as recipient)</li>
+</ul>
+</p>
+
+
+<p><strong>Variable pairs:</strong></p>
+<p><strong>{attachments backspace="X"}{/attachments}</strong> &mdash; used to display list of attachment for message being forwarded. Can be used to populate forward_attachments[] fields for selecting which attachments should be forwarded too. Inside {attachments} following variables are available:</p>
+<ul>
+<li><dfn>attachment_id</dfn> &mdash; attachment ID (used as value for input)</li>
+<li><dfn>attachment_name</dfn> &mdash; file name</li>
+<li><dfn>attachment_size</dfn> &mdash; file size</li>
+<li><dfn>attachment_extension</dfn> &mdash; file extension</li>
+</ul>
+<p><em>backspace</em> parameter is optional and lets you remove X last characters from the output.</p>
+
+
+<p>Example forwaring message:</p>
+<code>
+{exp:messaging:pm_compose forwarding="{segment_3}"}<br />
+{if warning}<br />
+&lt;div class="warning"&gt;{warning}&lt;/div&gt;<br />
+{/if}<br />
+&lt;p&gt;Recipient:<br />
+&lt;br /&gt;&lt;input type="text" name="recipients" value="" /&gt;<br />
+&lt;/p&gt;<br />
+&lt;p&gt;Subject:<br />
+&lt;br /&gt;&lt;input type="text" name="subject" value="{subject}" /&gt;<br />
+&lt;/p&gt;<br />
+&lt;p&gt;Message text:<br />
+&lt;br /&gt;&lt;textarea name="message"&gt;{message}&lt;/textarea&gt;<br />
+&lt;/p&gt;<br />
+{if attachments}<br />
+&lt;p&gt;Attachments:<br />
+{attachments}<br />
+&lt;br /&gt;&lt;input type="checkbox" value="{attachment_id}" name="forward_attachments[]" /&gt; {attachment_name}<br />
+{/attachments}<br />
+&lt;/p&gt;<br />
+{/if}<br />
+&lt;p&gt;&lt;input type="submit" value="send" /&gt;&lt;/p&gt;<br />
+{/exp:messaging:pm_compose}
+</code> 
+
+<p>Example replying to message:</p>
+<code>
+{exp:messaging:pm_compose replying="{segment_3}"}<br />
+{if warning}<br />
+&lt;div class="warning"&gt;{warning}&lt;/div&gt;<br />
+{/if}<br />
+&lt;p&gt;Recipient:<br />
+&lt;br /&gt;&lt;input type="text" name="recipients" value="{exp:messaging:author message_id="{segment_3}"}" /&gt;<br />
+&lt;/p&gt;<br />
+&lt;p&gt;Subject:<br />
+&lt;br /&gt;&lt;input type="text" name="subject" value="{subject}" /&gt;<br />
+&lt;/p&gt;<br />
+&lt;p&gt;Message text:<br />
+&lt;br /&gt;&lt;textarea name="message"&gt;{message}&lt;/textarea&gt;<br />
+&lt;/p&gt;<br />
+&lt;p&gt;&lt;input type="submit" value="send" /&gt;&lt;/p&gt;<br />
+{/exp:messaging:pm_compose}
+</code>     
+    
+    
+    
+    
+    <h3><a name="pm-list" href="#top">&uarr;</a>View messages in folder</h3>
+    
+<code>
+&lt;p&gt;Messages in {exp:messaging:folders folder_id="{segment_2}"}{folder_name}{/exp:messaging:folders}&lt;/p&gt;<br />
+&lt;table class="pm"&gt;<br />
+&lt;tr&gt;<br />
+&lt;th&gt;&lt;/th&gt;<br />
+&lt;th&gt;From&lt;/th&gt;<br />
+&lt;th&gt;Subject&lt;/th&gt;<br />
+&lt;th&gt;Date&lt;/th&gt;<br />
+&lt;/tr&gt;<br />
+{exp:messaging:private_messages folder_id="{segment_2}" paginate="both" limit="20" form="yes"}<br />
+{if no_results}<br />
+&lt;tr&gt;<br />
+&lt;td class="no_results" colspan="4"&gt;No messages here&lt;/td&gt;<br />
+&lt;/tr&gt;<br />
+{/if}<br />
+{paginate}<br />
+&lt;tr&gt;<br />
+&lt;td class="pager" colspan="4"&gt;{pagination_links}&lt;/td&gt;<br />
+&lt;/tr&gt;<br />
+{/paginate}<br />
+&lt;tr id="pm_{message_id}"&gt;<br />
+&lt;td&gt;<br />
+&lt;input type="checkbox" name="message_id[]" value="{message_id}" /&gt;<br />
+&lt;/td&gt;<br />
+&lt;td&gt;<br />
+&lt;a href="{path=member/profile/{sender_member_id}}"&gt;{sender_screen_name}&lt;/a&gt;<br />
+&lt;/td&gt;<br />
+&lt;td&gt;<br />
+&lt;a href="{path=messages/view/{message_id}}" class="{if has_attachment}attach {/if}{if replied}reply {/if}{if forwarded}fwd {/if}{if unread}new {/if}"&gt;{subject}&lt;/a&gt;<br />
+&lt;/td&gt;<br />
+&lt;td&gt;<br />
+{message_date format="%Y-%m-%d"}<br />
+&lt;/td&gt;<br />
+&lt;/tr&gt;<br />
+{if '{count}'=='20' OR '{absolute_count}'=='{total_results}'}<br />
+&lt;tr&gt;<br />
+&lt;td colspan="4" class="pm-move"&gt;<br />
+Move selected messages: {folder_select} &lt;input type="submit" name="move" value="move selected" /&gt; &lt;input type="submit" name="delete" value="delete selected" /&gt;<br />
+&lt;/td&gt;<br />
+&lt;/tr&gt;<br />
+{/if}<br />
+{/exp:messaging:private_messages}<br />
+&lt;/table&gt;
+</code>
+
+<p><strong>{exp:messaging:private_messages}</strong> (or {exp:messaging:pm}, which is the same) tag will display private messages for logged in user.</p>
+
+<p><strong>Tag parameters (all optional):</strong>
+<ul>
+<li><dfn>folder</dfn> &mdash; name of folder, from which you want to display messages. Can be 'inbox', 'sent', 'trash' or name of your custom folder. If folder and folder_id are omited, will display message from Inbox.</li>
+<li><dfn>folder_id</dfn> &mdash; ID of folder, from which you want to display messages. Number from 0 to 10 (0 - trash, 1 - inbox, 2 - sent, all other are custom folders you can create)</li>
+<li><dfn>message_id</dfn> &mdash; make the tag work in <a href="#pm-message">single-message mode</a></li>
+<li><dfn>sort="asc"</dfn> &mdash; sorting order. By default, the latest message is diplayed first. Set this parameter if you want oldest messages to be displayed first.</li>
+<li><dfn>mark_read="no"</dfn> &mdash; force the message(s) no be NOT marked as read. <em>Note:</em> the message is marked as read when {message} variable is displayed.</li>
+<li><dfn>form="yes"</dfn> &mdash; if set, creates form for moving/deleting messages around all data displayed and parses {folder_select} variable</li>
+<li><dfn>return</dfn> &mdash; a page to return after moving message. Can be a full URL or URI segments.<br />Use <em>return="SAME_PAGE"</em> to return user to the original page.</li>
+<li><dfn>limit</dfn> &mdash; number of messages per page, if you want to use pagination</li>
+<li><dfn>paginate</dfn> &mdash; place to display pagination links. Can be 'top', 'bottom' or 'both'. Defaults to 'bottom'</li>
+<li><dfn>backspace="X"</dfn> &mdash; remove X last characters from tag output result</li>
+<li><dfn>ajax="yes"</dfn> &mdash; turn on AJAX mode for moving/deleting form and links. The success or error messages shown upon submit will be shown as simple text, without using message templates.</li>
+</ul>
+</p>
+
+<p><strong>Conditional variables:</strong>
+<ul>
+<li><dfn>{if no_results}{/if}</dfn> &mdash; displayed if there are no messages available</li>
+<li><dfn>{if read}{/if}</dfn> &mdash; displayed if message has already been read</li>
+<li><dfn>{if unread}{/if}</dfn> &mdash; displayed if message has not been read yet</li>
+<li><dfn>{if replied}{/if}</dfn> &mdash; displayed if user has replied to this message</li>
+<li><dfn>{if forwarded}{/if}</dfn> &mdash; displayed if user has forwarded this message</li>
+<li><dfn>{if has_attachments}{/if}</dfn> &mdash; displayed if there are any files attached</li>
+
+</ul>
+</p>
+
+<p><strong>Single variables:</strong>
+<ul>
+<li><dfn>total_results</dfn> &mdash; total number of private messages in this folder</li>
+<li><dfn>count</dfn> &mdash; message counter on each page</li>
+<li><dfn>absolute_count</dfn> &mdash; message counter throughout all pages</li>
+<li><dfn>message_id</dfn> &mdash; private message ID</li>
+<li><dfn>sender_member_id</dfn> &mdash; member ID of person who sent the message</li>
+<li><dfn>sender_username</dfn> &mdash; username of person who sent the message</li>
+<li><dfn>sender_screen_name</dfn> &mdash; screen name of person who sent the message</li>
+<li><dfn>sender_email</dfn> &mdash; email of sender</li>
+<li><dfn>sender_avatar_url</dfn> &mdash; URL of sender's avatar</li>
+<li><dfn>sender_photo_url</dfn> &mdash; URL of sender's profile photo</li>
+<li><dfn>subject</dfn> &mdash; message subject</li>
+<li><dfn>message</dfn> &mdash; message body text</li>
+<li><dfn>message_date format="%Y-%m-%d"</dfn> &mdash; the date when message has been sent. Standard EE date formatting rules apply.</li>
+<li><dfn>delete_url</dfn> &mdash; URL for message deleting</li>
+<li><dfn>delete_link</dfn> &mdash; pre-formatted link to delete message</li>
+<li><dfn>folder_select</dfn> &mdash; pre-formatted dropdown select for folders that the message can be moved to. Displayed only if form="yes" parameter is specified.</li>
+<li><dfn>{paginate}{pagination_links}{/paginate}</dfn> &mdash; pagination links (if you have limit parameter set and there's more than one page)</li>
+</ul>
+</p>    
+
+<p>To display total number of unread messages, you can use EE's standard <dfn>{private_messages}</dfn> variable, which is available anywhere in your template. Or you can use {unread_count} variable available within {exp:messaging:folders} tag pair.</p>
+    
+    
+<p><strong>Variable pairs:</strong></p>  
+
+<p><strong>{attachments backspace="X"}{/attachments}</strong> &mdash; used to display list of files attached with the message.</p>
+<ul>
+<li><dfn>attachment_id</dfn> &mdash; attachment ID (used as value for input)</li>
+<li><dfn>attachment_name</dfn> &mdash; file name</li>
+<li><dfn>attachment_size</dfn> &mdash; file size</li>
+<li><dfn>attachment_extension</dfn> &mdash; file extension</li>
+<li><dfn>download_url</dfn> &mdash; URL for downloading the file</li>
+</ul>
+  
+<p><strong>{recipients backspace="X"}{/recipients}</strong> &mdash; used to display list of recipients for this message</p>
+<ul>
+<li><dfn>recipient_member_id</dfn> &mdash; member ID of PM recipient</li>
+<li><dfn>recipient_username</dfn> &mdash; username of PM recipient</li>
+<li><dfn>recipient_screen_name</dfn> &mdash; screen name of PM recipient</li>
+<li><dfn>recipient_email</dfn> &mdash; email of recipient</li>
+<li><dfn>recipient_avatar_url</dfn> &mdash; URL of recipient's avatar</li>
+<li><dfn>recipient_photo_url</dfn> &mdash; URL of recipient's profile photo</li>
+<li><dfn>recipient_count</dfn> &mdash; counter for recipients loop</li>
+<li><dfn>total_recipients</dfn> &mdash; total number of recipients</li>
+</ul>  
+
+<p><strong>{cc backspace="X"}{/cc}</strong> &mdash; used to display list of copy recipients for this message</p>
+<ul>
+<li><dfn>recipient_member_id</dfn> &mdash; member ID of PM copy recipient</li>
+<li><dfn>recipient_username</dfn> &mdash; username of PM copy recipient</li>
+<li><dfn>recipient_screen_name</dfn> &mdash; screen name of PM copy recipient</li>
+<li><dfn>recipient_email</dfn> &mdash; email of recipient</li>
+<li><dfn>recipient_avatar_url</dfn> &mdash; URL of recipient's avatar</li>
+<li><dfn>recipient_photo_url</dfn> &mdash; URL of recipient's profile photo</li>
+<li><dfn>recipient_count</dfn> &mdash; counter for recipients loop</li>
+<li><dfn>total_cc</dfn> &mdash; total number of copies</li>
+</ul>  
+<p><em>backspace</em> parameter is optional and lets you remove X last characters from the output.</p>    
+
+
+    <h3><a name="pm-thread" href="#top">&uarr;</a>View messages in conversation mode</h3>
+    
+<p><strong>{exp:messaging:pm_thread}</strong> tag lets you display messages as thread or conversation. Is displays complete conversation thread between pair of recipient and sender (identified by subject).</p> 
+
+
+<code>
+{exp:messaging:pm_thread message_id="{segment_3}" backspace="6"}<br />
+{if "{count}"=="1"}&lt;p&gt;&lt;strong&gt;{subject}&lt;/strong&gt;&lt;/p&gt;{/if}<br />
+&lt;p&gt;From: &lt;a href="{path=member/profile/{sender_member_id}}"&gt;{sender_screen_name}&lt;/a&gt;&lt;/p&gt;<br />
+&lt;p&gt;To: {recipients backspace="1"}&lt;a href="{path=member/profile/{recipient_member_id}}"&gt;{recipient_screen_name}&lt;/a&gt;, {/recipients}&lt;/p&gt;<br />
+&lt;p&gt;Sent on: {message_date format="%Y-%m-%d"}&lt;/p&gt;<br />
+&lt;div class="message" {if current_message} style="font-weight: bold"{/if}&gt;{message}&lt;/div&gt;<br />
+&lt;hr /&gt;<br />
+{/exp:messaging:pm_thread}
+</code>
+
+
+<p><strong>Tag parameters:</strong>
+<ul>
+<li><dfn>message_id</dfn> &mdash; ID of any message that is part of this conversation thread. Required</li>
+<li><dfn>sort="asc"</dfn> &mdash; sorting order. By default, the latest message is diplayed first. Set this parameter if you want oldest messages to be displayed first.</li>
+<li><dfn>backspace="X"</dfn> &mdash; remove X last characters from tag output result</li>
+<li><dfn>form="yes"</dfn> &mdash; if set, creates form for moving/deleting messages around all data displayed and parses {folder_select} variable</li>
+<li><dfn>ajax="yes"</dfn> &mdash; turn on AJAX mode for moving/deleting form and links. The success or error messages shown upon submit will be shown as simple text, without using message templates.</li>
+</ul>
+</p>
+
+<p>All variables presented by {exp:messaging:private_messages} are available with this tag as well. Additionally, followinf conditional can be used:
+<ul>
+<li><dfn>{if current_message}{/if}</dfn> &mdash; idenifies current (selected) message</li>
+</ul>
+</p>
+
+
+    
+    
+    <h3><a name="pm-message" href="#top">&uarr;</a>View PM</h3>
+    
+<p>To display particular message, you'll need to use same <strong>{exp:messaging:private_messages}</strong> tag, but with <em>member_id</em> parameter set.</p>    
+
+<code>
+{exp:messaging:private_messages message_id="{segment_3}"}<br />
+&lt;p&gt;From: &lt;a href="{path=member/profile/{sender_member_id}}"&gt;{sender_screen_name}&lt;/a&gt;&lt;/p&gt;<br />
+&lt;p&gt;To: {recipients backspace="1"}&lt;a href="{path=member/profile/{recipient_member_id}}"&gt;{recipient_screen_name}&lt;/a&gt;, {/recipients}&lt;/p&gt;<br />
+&lt;p&gt;Sent on: {message_date format="%Y-%m-%d"}&lt;/p&gt;<br />
+&lt;p&gt;&lt;strong&gt;{subject}&lt;/strong&gt;&lt;/p&gt;<br />
+&lt;div class="message"&gt;{message}&lt;/div&gt;<br />
+{if has_attachments}<br />
+&lt;div class="att"&gt;<br />
+{attachments}<br />
+&lt;a href="{download_url}"&gt;{attachment_name}&lt;/a&gt; ({attachment_size})&lt;br /&gt;<br />
+{/attachments}<br />
+&lt;/div&gt;<br />
+{/if}<br />
+&lt;p&gt;&lt;a href="{path=messages/reply/{message_id}}"&gt;Reply&lt;/a&gt; - &lt;a href="{path=messages/forward/{message_id}}"&gt;Forward&lt;/a&gt; - &lt;a href="{delete_url}"&gt;Delete&lt;/a&gt;&lt;/p&gt;<br />
+{/exp:messaging:private_messages}
+</code>
+
+    
+    
+    <h3><a name="pm-move" href="#top">&uarr;</a>Moving and deleting messages</h3>
+
+<p>To be able to move message to different folder, call {exp:messaging:private_messages} with form="yes" parameter. Then, you'll have {folder_select} variable containing dropdown select of available folders. ID of messages that should be moved should be in inpus (usually checkboxes) named message_id[]. If the submitted form will contain input named 'delete' the message(s) will be deleted instead (moved to Trash, or deleted permanently if they're in Trash already).</p>
+<p>You can also delete message by clicking {delete_url} generated by same tag for each message.</p>
+    
+    
+    <h3><a name="pm-author" href="#top">&uarr;</a>Message author</h3>
+    
+<code>
+{exp:messaging:author message_id="{segment_3}"}
+</code>    
+
+<p><strong>{exp:messaging:author}</strong> will return sender's screen name for message defined by <em>message_id</em> parameter.</p>
+    
+    <h3><a name="pm-folders" href="#top">&uarr;</a>Message folders list</h3>
+    
+<code>
+&lt;ul&gt;<br />
+{exp:messaging:folders}<br />
+&lt;li&gt;&lt;a href="{path=messages/folder/{folder_id}}"&gt;{folder_name}&lt;/a&gt; ({messages_count})&lt;/li&gt;<br />
+{/exp:messaging:folders}<br />
+&lt;/ul&gt;
+</code>    
+    
+<p><strong>{exp:messaging:folders}</strong> tag is used to display list of user's PM folders (and also for folders editing, <a href="#pm-folderedit">see below</a>). </p>    
+
+<p><strong>Tag parameters:</strong>
+<ul>
+<li><dfn>folder_id</dfn> &mdash; provide folder ID if you want to limit output to certain folder (e.g. display folder name)</li>
+<li><dfn>folder</dfn> &mdash; provide folder's name instead of ID to limit output</li>
+<li><dfn>exclude_trash="yes"</dfn> &mdash; do not include 'Trash' folder in list (useful for editing, as it's name cannot be changed)</li>
+<li><dfn>show_new="one"</dfn> or <dfn>show_new="all"</dfn> &mdash; define how many "new" folders you want to show (for folders creation) - one or all available (used for folders editing).</li>
+</ul>
+</p>
+
+<p><strong>Single variables:</strong>
+<ul>
+<li><dfn>folder_id</dfn> &mdash; ID of folder</li>
+<li><dfn>folder_name</dfn> &mdash; name of folder</li>
+<li><dfn>messages_count</dfn> &mdash; number of messages in folder</li>
+<li><dfn>unread_count</dfn> &mdash; number of unread messages in folder</li>
+</ul>
+</p>    
+
+
+    
+    
+    <h3><a name="pm-folderedit" href="#top">&uarr;</a>Editing folders</h3>
+
+<code>
+{exp:messaging:edit_folders}<br />
+{exp:messaging:folders show_new="one"}<br />
+&lt;p&gt;&lt;input name="folder{folder_id}" value="{folder_name}" /&gt;&lt;/p&gt;<br />
+{/exp:messaging:folders}<br />
+&lt;p&gt;&lt;input type="submit" value="save" /&gt;&lt;/p&gt;<br />
+{/exp:messaging:edit_folders}
+</code> 
+
+<p>Folders editing is done by combining <strong>{exp:messaging:edit_folders}</strong> and <strong>{exp:messaging:folders}</strong> tags</p>
+
+<p>In ExpressionEngine, the users are able to create 8 custom folders (plus built-in Trash, Inbox and Sent). You can also give your own names to Inbox and Sent. In order to delete folder, submit the form with it's name empty. If folder has been deleted, all messages in it will be moved to Trash.</p>
+
+<p><strong>Tag parameters:</strong>
+<ul>
+<li><dfn>return</dfn> &mdash; a page to return after sending message. Can be a full URL or URI segments.<br />Use <em>return="SAME_PAGE"</em> to return user to the page used to display form.</li>
+<li><dfn>ajax="yes"</dfn> &mdash; turn on AJAX mode. The success or error messages shown upon submission will be shown as simple text, without using message templates. The "return" parameter will not be functional if you supply this parameter.</li>
+<li><dfn>id</dfn> &mdash; form ID (defaults to 'messaging_form')</li>
+<li><dfn>class</dfn> &mdash; form class (defaults to 'messaging_form')</li>
+<li><dfn>name</dfn> &mdash; form name (defaults to 'messaging_form')</li>
+</ul>
+</p>
+
+<p><strong>Form fields</strong>:
+<ul>
+<li><dfn>folderX</dfn> &mdash; with X being numbers from 1 to 10, this field is used for saving folder names</li>
+</ul>
+</p>
+
+	<h3><a name="pm-info" href="#top">&uarr;</a>Member's general PM info</h3>
+    
+<code>
+{exp:messaging:info}<br />
+You have {messages_total} stored out of {messages_limit} allowed ({messages_percent}%)<br />
+{/exp:messaging:info}<br />
+</code>    
+
+<p><strong>Single variables:</strong>
+<ul>
+<li><dfn>messages_total</dfn> &mdash; total messages stored for member</li>
+<li><dfn>messages_limit</dfn> &mdash; limit of messages member can store</li>
+<li><dfn>messages_percent</dfn> &mdash; percent showing how full are member's folders</li>
+<li><dfn>send_limit</dfn> &mdash; number of PM member is allowed to send daily</li>
+<li><dfn>max_chars</dfn> &mdash; maximum chracters PM can contain</li>
+<li><dfn>attach_maxsize</dfn> &mdash; maximum size of attached file, KB</li>
+<li><dfn>attach_total</dfn> &mdash; maximum size of all attachments, MB</li>
+<li><dfn>max_attachments</dfn> &mdash; maximum number of files that can be attached to message</li>
+</ul>
+</p>
+
+
+
+	<h2><a name="list" href="#top">&uarr;</a>Member lists</h2>
+
+	<h3><a name="list-buddies" href="#top">&uarr;</a>Buddies list</h3>
+
+<code>
+&lt;ul&gt;<br />
+{exp:messaging:buddies}<br />
+&lt;li&gt;&lt;a href="{path=member/profile/{member_id}}"&gt;{screen_name}&lt;/a&gt; ({remove_link})&lt;/li&gt;<br />
+{/exp:messaging:buddies}<br />
+&lt;/ul&gt;
+</code>    
+
+<p><strong>{exp:messaging:buddies}</strong> will display list of buddies for logged in person.</p>
+
+<p><strong>Tag parameters (all optional):</strong>
+<ul>
+<li><dfn>buddy_id</dfn> &mdash; if you want to check whether certain member has been added as buddy, set this parameter to his member_id</li>
+<li><dfn>ajax="yes"</dfn> &mdash; turn on AJAX mode for remove_link. The success or error messages shown upon clicking remove_link will be shown as simple text, without using message templates.</li>
+<li><dfn>return</dfn> &mdash; a page to return after removing user from list. Can be a full URL or URI segments.<br />Use <em>return="SAME_PAGE"</em> to return user to the original page.</li>
+<li><dfn>limit</dfn> &mdash; number of records per page, if you want to use pagination</li>
+<li><dfn>paginate</dfn> &mdash; place to display pagination links. Can be 'top', 'bottom' or 'both'. Defaults to 'bottom'</li>
+<li><dfn>backspace="X"</dfn> &mdash; remove X last characters from tag output result</li>
+</ul>
+</p>    
+
+<p><strong>Single variables:</strong>
+<ul>
+<li><dfn>member_id</dfn> &mdash; buddy member ID</li>
+<li><dfn>username</dfn> &mdash; buddy username</li>
+<li><dfn>screen_name</dfn> &mdash; buddy screen name</li>
+<li>and other variables that have their values stored in exp_members database table for each buddy</li>
+<li><dfn>remove_link</dfn> &mdash; pre-formatted link to delete member from list</li>
+<li><dfn>remove_url</dfn> &mdash; link URL to delete member from list</li>
+<li><dfn>count</dfn> &mdash; rows counter</li>
+<li><dfn>absolute_count</dfn> &mdash; rows counter throughout all pages</li>
+<li><dfn>{paginate}{pagination_links}{/paginate}</dfn> &mdash; pagination links (if you have limit parameter set and there's more than one page)</li>
+</ul>
+</p>
+<p>All single variables are also available with <em>buddy_</em> prefix (buddy_member_id, buddy_username, etc.) that can be used if you run into variable naming conflicts.</p>
+    
+    
+   	<h3><a name="list-blocked" href="#top">&uarr;</a>Blocked list</h3>
+    
+<code>
+&lt;ul&gt;<br />
+{exp:messaging:blocked}<br />
+&lt;li&gt;&lt;a href="{path=member/profile/{member_id}}"&gt;{screen_name}&lt;/a&gt; ({remove_link})&lt;/li&gt;<br />
+{/exp:messaging:blocked}<br />
+&lt;/ul&gt;
+</code>    
+
+<p><strong>{exp:messaging:blocked}</strong> will display list of members blocked/ignored by logged in person.</p>
+
+<p><strong>Tag parameters (all optional):</strong>
+<ul>
+<li><dfn>buddy_id</dfn> &mdash; if you want to check whether certain member has been listed as blocked, set this parameter to his member_id</li>
+<li><dfn>ajax="yes"</dfn> &mdash; turn on AJAX mode for remove_link. The success or error messages shown upon clicking remove_link will be shown as simple text, without using message templates.</li>
+<li><dfn>limit</dfn> &mdash; number of records per page, if you want to use pagination</li>
+<li><dfn>paginate</dfn> &mdash; place to display pagination links. Can be 'top', 'bottom' or 'both'. Defaults to 'bottom'</li>
+<li><dfn>backspace="X"</dfn> &mdash; remove X last characters from tag output result</li>
+</ul>
+</p>    
+
+<p><strong>Single variables:</strong>
+<ul>
+<li><dfn>member_id</dfn> &mdash; blocked member ID</li>
+<li><dfn>username</dfn> &mdash; blocked username</li>
+<li><dfn>screen_name</dfn> &mdash; blocked screen name</li>
+<li>and other variables that have their values stored in exp_members database table for each blocked user</li>
+<li><dfn>remove_link</dfn> &mdash; pre-formatted link to delete member from list</li>
+<li><dfn>remove_url</dfn> &mdash; link URL to delete member from list</li>
+<li><dfn>count</dfn> &mdash; rows counter</li>
+<li><dfn>absolute_count</dfn> &mdash; rows counter throughout all pages</li>
+<li><dfn>{paginate}{pagination_links}{/paginate}</dfn> &mdash; pagination links (if you have limit parameter set and there's more than one page)</li>
+</ul>
+</p>
+<p>All single variables are also available with <em>buddy_</em> prefix (buddy_member_id, buddy_username, etc.) that can be used if you run into variable naming conflicts.</p>    
+    
+    
+    
+   	<h3><a name="list-add" href="#top">&uarr;</a>Adding to list</h3>
+<code>
+&lt;ul&gt;<br />
+{exp:query sql="SELECT * FROM exp_members WHERE group_id=5"}<br />
+&lt;li&gt;&lt;a href="{path=member/profile/{member_id}}"&gt;{screen_name}&lt;/a&gt; (&lt;a href="{exp:messaging:add_to_buddies_link url_only="yes" member_id="{member_id}"}"&gt;Follow&lt;/a&gt;)&lt;/li&gt;<br />
+{/exp:query}<br />
+&lt;/ul&gt;
+</code>    
+
+<p>Use <strong>{exp:messaging:add_to_buddies_link}</strong>tag to display link that would allow to add person to buddies list; <strong>{exp:messaging:add_to_blocked_link}</strong> - for adding to blocked list.</p>
+
+<p><strong>Tag parameters (all optional):</strong>
+<ul>
+<li><dfn>ajax="yes"</dfn> &mdash; turn on AJAX mode for link. The success or error messages shown upon clicking link will be shown as simple text, without using message templates.</li>
+<li><dfn>return</dfn> &mdash; a page to return after adding user to list. Can be a full URL or URI segments.<br />Use <em>return="SAME_PAGE"</em> to return user to the original page.</li>
+<li><dfn>url_only="yes"</dfn> &mdash; display only the actual URL. By default will display pre-formatted link.</li>
+</ul>
+</p>       
+    
+    
+   	<h3><a name="list-remove" href="#top">&uarr;</a>Removing from list</h3>
+
+
+<p>The links for removing person from buddies/blocked list can be displayed using <dfn>{remove_link}</dfn> variable in {exp:messaging:buddies} and {exp:messaging:blocked}</p>
+
+
+   	<h3><a name="list-state" href="#top">&uarr;</a>Check buddy/blocked state</h3>
+
+
+<code>
+&lt;ul&gt;<br />
+{exp:messaging:check_buddy_state member_id="{member_id}"}<br />
+{if blocked}Blocked - {remove_link}{/if}&lt;br /&gt;<br />
+{if buddy}Followed - {remove_link}{/if}&lt;br /&gt;<br />
+{/exp:messaging:check_buddy_state}<br />
+&lt;/ul&gt;
+</code>    
+
+<p><strong>{exp:messaging:check_buddy_state}</strong> allows you to check whether certain user has been added to buddies/blocked list by logged in person.</p>
+
+<p><strong>Tag parameters:</strong>
+<ul>
+<li><dfn>member_id</dfn> &mdash; the ID of member to check. Required</li>
+<li><dfn>ajax="yes"</dfn> &mdash; turn on AJAX mode for remove_link. The success or error messages shown upon clicking remove_link will be shown as simple text, without using message templates.</li>
+<li><dfn>return</dfn> &mdash; a page to return after removing from list. Can be a full URL or URI segments.<br />Use <em>return="SAME_PAGE"</em> to return user to the page used to display link.</li>
+<li><dfn>skip_success_message="yes"</dfn> &mdash; force redirect to return page without showing success message.</li>
+</ul>
+</p>    
+
+<p><strong>Single variables:</strong>
+<ul>
+<li><dfn>remove_link</dfn> &mdash; pre-formatted link to delete member from list</li>
+<li><dfn>remove_url</dfn> &mdash; link URL to delete member from list</li>
+</ul>
+</p>
+
+<p><strong>Conditional variables:</strong>
+<ul>
+<li><dfn>if blocked</dfn> &mdash; displayed if user is in blocked list</li>
+<li><dfn>if buddy</dfn> &mdash; displayed if user is in buddies list</li>
+</ul>
+</p>
+ 
+
+
+
+
+<h2><a name="hooks" href="#top">&uarr;</a> Extension hooks</h2>
+
+<p>The module contain several extension hooks, that allow triggering of custom extensions upon certain event.</p>
+
+<h4>messaging_bulletin_sent</h4>
+
+<p>Triggered after bulletin has been sent.</p>
+<p>Parameters:<br />
+&mdash; (string) $bulletin_message - bulletin message text;
+&mdash; (array) $recipients - recipient user groups
+</p>
+
+<h4>messaging_pm_sent</h4>
+
+<p>Triggered after PM has been sent, but before email notification goes out.</p>
+<p>Parameters:<br />
+&mdash; (array) $data - message data;
+&mdash; (array) $recipients - recipients;
+&mdash; (array) $cc - carbon copy recipients;
+</p>
+ 
+<h4>messaging_member_listed</h4>
+
+<p>Triggered after user adds someone to buddies/blocked list.</p>
+<p>Parameters:<br />
+&mdash; (int) $member_id - ID of member that performs the action (adds to the list);
+&mdash; (int) $listed_member - ID of member added to the list;
+&mdash; (string) $type - list type (buddy/blocked);
+</p> 
+
+
+
+</div>
+
+<p class="center"><a href="#top">Top of page</a></p>
+
+<!-- {user_guide_comments} -->
+
+<div id="footer">
+  <address>Copyright &copy; 2011 Yuri Salimovskiy <a href="http://www.intoeetive.com/">intoEEtive.com</a></address>
+</div>
+
+</body>
+</html>
