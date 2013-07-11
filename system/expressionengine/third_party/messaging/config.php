@@ -3,7 +3,7 @@
 if ( ! defined('MESSAGING_ADDON_NAME'))
 {
 	define('MESSAGING_ADDON_NAME',         'Messaging');
-	define('MESSAGING_ADDON_VERSION',      '0.5.2');
+	define('MESSAGING_ADDON_VERSION',      '0.6.0');
 }
 
 $config['name']=MESSAGING_ADDON_NAME;

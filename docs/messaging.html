@@ -48,7 +48,8 @@
         <li><a href="#pm">Private Messages</a>
             <ul>
             <li><a href="#pm-compose">Compose PM</a></li>
-            <li><a href="#pm-list">View messages in folder</a></li>   
+            <li><a href="#pm-list">View messages in folder</a></li>  
+			<li><a href="#conversation">View messages list grouped by conversation</a></li> 
 			<li><a href="#pm-thread">View messages in conversation mode</a></li>           
             <li><a href="#pm-message">View PM</a></li>
             <li><a href="#pm-move">Moving and deleting messages</a></li>
@@ -170,7 +171,7 @@ Message from &lt;a href="{path=member/profile/{sender_member_id}}"&gt;{sender_sc
 <li><dfn>message</dfn> &mdash; message text</li>
 <li><dfn>message_date format="%Y-%m-%d"</dfn> &mdash; the date when message has been sent. Standard EE date formatting rules apply.</li>
 <li><dfn>delete_link</dfn> &mdash; pre-formatted link to delete message (shown only if user has permissions)</li>
-<li><dfn>{paginate}{pagination_links}{/paginate}</dfn> &mdash; pagination links (if you have limit parameter set and there's more than one page)</li>
+<li><dfn>{paginate}{pagination_links}{/paginate}</dfn> &mdash; pagination links (if you have limit parameter set and there's more than one page). You can also use {pagination_links} tag pair, like with <a href="http://ellislab.com/expressionengine/user-guide/modules/channel/pagination_page.html" target="_blank">channel entries pagination</a>.</li>
 </ul>
 </p>
 
@@ -420,11 +421,9 @@ Move selected messages: {folder_select} &lt;input type="submit" name="move" valu
 <li><dfn>delete_url</dfn> &mdash; URL for message deleting</li>
 <li><dfn>delete_link</dfn> &mdash; pre-formatted link to delete message</li>
 <li><dfn>folder_select</dfn> &mdash; pre-formatted dropdown select for folders that the message can be moved to. Displayed only if form="yes" parameter is specified.</li>
-<li><dfn>{paginate}{pagination_links}{/paginate}</dfn> &mdash; pagination links (if you have limit parameter set and there's more than one page)</li>
+<li><dfn>{paginate}{pagination_links}{/paginate}</dfn> &mdash; pagination links (if you have limit parameter set and there's more than one page). You can also use {pagination_links} tag pair, like with <a href="http://ellislab.com/expressionengine/user-guide/modules/channel/pagination_page.html" target="_blank">channel entries pagination</a>.</li>
 </ul>
 </p>    
-
-<p>To display total number of unread messages, you can use EE's standard <dfn>{private_messages}</dfn> variable, which is available anywhere in your template. Or you can use {unread_count} variable available within {exp:messaging:folders} tag pair.</p>
     
     
 <p><strong>Variable pairs:</strong></p>  
@@ -462,6 +461,128 @@ Move selected messages: {folder_select} &lt;input type="submit" name="move" valu
 <li><dfn>total_cc</dfn> &mdash; total number of copies</li>
 </ul>  
 <p><em>backspace</em> parameter is optional and lets you remove X last characters from the output.</p>    
+
+
+    <h3><a name="conversation" href="#top">&uarr;</a>View messages list grouped by conversation</h3>
+    
+<p><strong>{exp:messaging:conversations}</strong> tag lets you display list of messages grouped by conversation (sender/recipient pair and subject). Similar to Facebook- or Gmail- style.</p> 
+
+
+<code>
+{exp:messaging:conversations combined="yes" limit="25" paginate="both"}<br />
+<br />
+{paginate}<br />
+{pagination_links}<br />
+&lt;ul&gt;<br />
+        {first_page}<br />
+                &lt;li&gt;&lt;a href="{pagination_url}" class="page-first"&gt;First Page&lt;/a&gt;&lt;/li&gt;<br />
+        {/first_page}<br />
+<br />
+        {previous_page}<br />
+                &lt;li&gt;&lt;a href="{pagination_url}" class="page-previous"&gt;Previous Page&lt;/a&gt;&lt;/li&gt;<br />
+        {/previous_page}<br />
+<br />
+        {page}<br />
+                &lt;li&gt;&lt;a href="{pagination_url}" class="page-{pagination_page_number} {if current_page}active{/if}"&gt;{pagination_page_number}&lt;/a&gt;&lt;/li&gt;<br />
+        {/page}<br />
+<br />
+        {next_page}<br />
+                &lt;li&gt;&lt;a href="{pagination_url}" class="page-next"&gt;Next Page&lt;/a&gt;&lt;/li&gt;<br />
+        {/next_page}<br />
+<br />
+        {last_page}<br />
+                &lt;li&gt;&lt;a href="{pagination_url}" class="page-last"&gt;Last Page&lt;/a&gt;&lt;/li&gt;<br />
+        {/last_page}<br />
+&lt;/ul&gt;<br />
+{/pagination_links}<br />
+{/paginate} <br />
+<br />
+&lt;p&gt;{conversation_count}. &lt;strong&gt;{subject}&lt;/strong&gt; - {last_message_date format="%Y-%m-%d"} - from {last_sender_screen_name} ({last_sender_username}) - to {last_recipient_screen_name} ({last_recipient_username}) ({messages_in_conversation} messages in conversation)<br />
+<br />
+{conversation}<br />
+&lt;br /&gt;<br />
+{count}. #{message_id} sent from {sender_screen_name} ({sender_username}) to {recipient_screen_name} ({recipient_username}) on {message_date format="%Y-%m-%d"}<br />
+{/conversation}<br />
+&lt;/p&gt;<br />
+<br />
+{/exp:messaging:conversations}
+</code>
+
+
+<p><strong>Tag parameters:</strong>
+<ul>
+<li><dfn>combined="yes"</dfn> &mdash; display messages from all folders (except Trash) combined. 'folder' and 'folder_id' parmeters will be ignored</li>
+<li><dfn>folder</dfn> &mdash; name of folder, from which you want to display messages. Can be 'inbox', 'sent', 'trash' or name of your custom folder. If folder and folder_id are omited, will display message from Inbox.</li>
+<li><dfn>folder_id</dfn> &mdash; ID of folder, from which you want to display messages. Number from 0 to 10 (0 - trash, 1 - inbox, 2 - sent, all other are custom folders you can create)</li>
+<li><dfn>limit</dfn> &mdash; number of messages per page, if you want to use pagination</li>
+<li><dfn>paginate</dfn> &mdash; place to display pagination links. Can be 'top', 'bottom' or 'both'. Defaults to 'bottom'</li>
+<li><dfn>backspace="X"</dfn> &mdash; remove X last characters from tag output result</li>
+</ul>
+</p>
+
+
+<p><strong>Single variables:</strong>
+<ul>
+<li><dfn>conversation_total_results</dfn> &mdash; total number of conversations</li>
+<li><dfn>conversation_count</dfn> &mdash; conversations counter on each page</li>
+<li><dfn>conversation_absolute_count</dfn> &mdash; conversations counter throughout all pages</li>
+<li><dfn>messages_in_conversation</dfn> &mdash; number of messages in conversation</li>
+<li><dfn>last_message_id</dfn> &mdash; ID of last message in conversation</li>
+<li><dfn>last_sender_member_id</dfn> &mdash; member ID of person who has sent the last message in conversation</li>
+<li><dfn>last_sender_username</dfn> &mdash; username of person who has sent the last message in conversation</li>
+<li><dfn>last_sender_screen_name</dfn> &mdash; screen name of person who has sent the last message in conversation</li>
+<li><dfn>last_sender_email</dfn> &mdash; email of last sender</li>
+<li><dfn>last_sender_avatar_url</dfn> &mdash; URL of last sender's avatar</li>
+<li><dfn>last_sender_photo_url</dfn> &mdash; URL of last sender's profile photo</li>
+<li><dfn>last_recipient_member_id</dfn> &mdash; member ID of person who received the last message in conversation</li>
+<li><dfn>last_recipient_username</dfn> &mdash; username of person who received the last message in conversation</li>
+<li><dfn>last_recipient_screen_name</dfn> &mdash; screen name of person who received the last message in conversation</li>
+<li><dfn>last_recipient_email</dfn> &mdash; email of last recipient</li>
+<li><dfn>last_recipient_avatar_url</dfn> &mdash; URL of last recipient's avatar</li>
+<li><dfn>last_recipient_photo_url</dfn> &mdash; URL of last recipient's profile photo</li>
+<li><dfn>subject</dfn> &mdash; messages subject</li>
+<li><dfn>last_message_date format="%Y-%m-%d"</dfn> &mdash; the date when last message in conversation has been sent. Standard EE date formatting rules apply.</li>
+<li><dfn>{paginate}{pagination_links}{/paginate}</dfn> &mdash; pagination links (if you have limit parameter set and there's more than one page). You can also use {pagination_links} tag pair, like with <a href="http://ellislab.com/expressionengine/user-guide/modules/channel/pagination_page.html" target="_blank">channel entries pagination</a>.</li>
+</ul>
+</p>
+
+<p><strong>{conversation backspace="X"}{/conversation}</strong> variables pair is used to display individual messages inside conversation.</p>
+
+<p>Inside <strong>{conversation}</strong> variables pair, following are available:
+<br />
+<strong>conditionals:</strong>
+<ul>
+<li><dfn>{if read}{/if}</dfn> &mdash; displayed if message has already been read</li>
+<li><dfn>{if unread}{/if}</dfn> &mdash; displayed if message has not been read yet</li>
+<li><dfn>{if replied}{/if}</dfn> &mdash; displayed if user has replied to this message</li>
+<li><dfn>{if forwarded}{/if}</dfn> &mdash; displayed if user has forwarded this message</li>
+<li><dfn>{if has_attachments}{/if}</dfn> &mdash; displayed if there are any files attached</li>
+</ul>
+
+<strong>single variables:</strong>
+<ul>
+
+<li><dfn>count</dfn> &mdash; message counter in current conversation</li>
+<li><dfn>message_id</dfn> &mdash; private message ID</li>
+<li><dfn>sender_member_id</dfn> &mdash; member ID of person who sent the message</li>
+<li><dfn>sender_username</dfn> &mdash; username of person who sent the message</li>
+<li><dfn>sender_screen_name</dfn> &mdash; screen name of person who sent the message</li>
+<li><dfn>sender_email</dfn> &mdash; email of sender</li>
+<li><dfn>sender_avatar_url</dfn> &mdash; URL of sender's avatar</li>
+<li><dfn>sender_photo_url</dfn> &mdash; URL of sender's profile photo</li>
+<li><dfn>recipient_member_id</dfn> &mdash; member ID of message recipient</li>
+<li><dfn>recipient_username</dfn> &mdash; username of message recipient</li>
+<li><dfn>recipient_screen_name</dfn> &mdash; screen name of message recipient</li>
+<li><dfn>recipient_email</dfn> &mdash; email of  message recipient</li>
+<li><dfn>recipient_avatar_url</dfn> &mdash; URL of  message recipient's avatar</li>
+<li><dfn>recipient_photo_url</dfn> &mdash; URL of  message recipient's profile photo</li>
+<li><dfn>message</dfn> &mdash; message body text</li>
+<li><dfn>message_date format="%Y-%m-%d"</dfn> &mdash; the date when message has been sent. Standard EE date formatting rules apply.</li>
+</ul>
+
+</p>
+
+
 
 
     <h3><a name="pm-thread" href="#top">&uarr;</a>View messages in conversation mode</h3>
@@ -613,6 +734,7 @@ You have {messages_total} stored out of {messages_limit} allowed ({messages_perc
 <p><strong>Single variables:</strong>
 <ul>
 <li><dfn>messages_total</dfn> &mdash; total messages stored for member</li>
+<li><dfn>messages_unread</dfn> &mdash; number of unread messages</li>
 <li><dfn>messages_limit</dfn> &mdash; limit of messages member can store</li>
 <li><dfn>messages_percent</dfn> &mdash; percent showing how full are member's folders</li>
 <li><dfn>send_limit</dfn> &mdash; number of PM member is allowed to send daily</li>
@@ -660,7 +782,7 @@ You have {messages_total} stored out of {messages_limit} allowed ({messages_perc
 <li><dfn>remove_url</dfn> &mdash; link URL to delete member from list</li>
 <li><dfn>count</dfn> &mdash; rows counter</li>
 <li><dfn>absolute_count</dfn> &mdash; rows counter throughout all pages</li>
-<li><dfn>{paginate}{pagination_links}{/paginate}</dfn> &mdash; pagination links (if you have limit parameter set and there's more than one page)</li>
+<li><dfn>{paginate}{pagination_links}{/paginate}</dfn> &mdash; pagination links (if you have limit parameter set and there's more than one page). You can also use {pagination_links} tag pair, like with <a href="http://ellislab.com/expressionengine/user-guide/modules/channel/pagination_page.html" target="_blank">channel entries pagination</a>.</li>
 </ul>
 </p>
 <p>All single variables are also available with <em>buddy_</em> prefix (buddy_member_id, buddy_username, etc.) that can be used if you run into variable naming conflicts.</p>
@@ -698,7 +820,7 @@ You have {messages_total} stored out of {messages_limit} allowed ({messages_perc
 <li><dfn>remove_url</dfn> &mdash; link URL to delete member from list</li>
 <li><dfn>count</dfn> &mdash; rows counter</li>
 <li><dfn>absolute_count</dfn> &mdash; rows counter throughout all pages</li>
-<li><dfn>{paginate}{pagination_links}{/paginate}</dfn> &mdash; pagination links (if you have limit parameter set and there's more than one page)</li>
+<li><dfn>{paginate}{pagination_links}{/paginate}</dfn> &mdash; pagination links (if you have limit parameter set and there's more than one page).  You can also use {pagination_links} tag pair, like with <a href="http://ellislab.com/expressionengine/user-guide/modules/channel/pagination_page.html" target="_blank">channel entries pagination</a>.</li>
 </ul>
 </p>
 <p>All single variables are also available with <em>buddy_</em> prefix (buddy_member_id, buddy_username, etc.) that can be used if you run into variable naming conflicts.</p>    

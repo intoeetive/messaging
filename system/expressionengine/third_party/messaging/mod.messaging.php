@@ -180,39 +180,55 @@ class Messaging {
             $out = substr($out, 0, - $backspace);
         }
         
-        if ($total > $this->perpage)
-        {
-            $this->EE->load->library('pagination');
-
-			$config['base_url']		= $basepath;
-			$config['prefix']		= 'P';
-			$config['total_rows'] 	= $total;
-			$config['per_page']		= $this->perpage;
-			$config['cur_page']		= $start;
-			$config['first_link'] 	= $this->EE->lang->line('pag_first_link');
-			$config['last_link'] 	= $this->EE->lang->line('pag_last_link');
-
-			$this->EE->pagination->initialize($config);
-			$pagination_links = $this->EE->pagination->create_links();	
-            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', $pagination_links, $paginate_tagdata);			
-        }
-        else
-        {
-            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', '', $paginate_tagdata);		
-        }
+        if ($this->EE->config->item('app_version') >= 240)
+		{
+	        $this->EE->load->library('pagination');
+	        $pagination = $this->EE->pagination->create(__CLASS__);
+	        $pagination->get_template();
+	        $pagination->per_page = $this->perpage;
+	        $pagination->total_rows = $total;
+	        $pagination->offset = $start;
+	        $pagination->build($pagination->per_page);
+	        $out = $pagination->render($out);
+  		}
+  		else
+  		{
         
-        switch ($paginate)
-        {
-            case 'top':
-                $out = $paginate_tagdata.$out;
-                break;
-            case 'both':
-                $out = $paginate_tagdata.$out.$paginate_tagdata;
-                break;
-            case 'bottom':
-            default:
-                $out = $out.$paginate_tagdata;
-        }
+	        if ($total > $this->perpage)
+	        {
+	            $this->EE->load->library('pagination');
+	
+				$config['base_url']		= $basepath;
+				$config['prefix']		= 'P';
+				$config['total_rows'] 	= $total;
+				$config['per_page']		= $this->perpage;
+				$config['cur_page']		= $start;
+				$config['first_link'] 	= $this->EE->lang->line('pag_first_link');
+				$config['last_link'] 	= $this->EE->lang->line('pag_last_link');
+	
+				$this->EE->pagination->initialize($config);
+				$pagination_links = $this->EE->pagination->create_links();	
+	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', $pagination_links, $paginate_tagdata);			
+	        }
+	        else
+	        {
+	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', '', $paginate_tagdata);		
+	        }
+	        
+	        switch ($paginate)
+	        {
+	            case 'top':
+	                $out = $paginate_tagdata.$out;
+	                break;
+	            case 'both':
+	                $out = $paginate_tagdata.$out.$paginate_tagdata;
+	                break;
+	            case 'bottom':
+	            default:
+	                $out = $out.$paginate_tagdata;
+	        }
+	        
+    	}
         
         return $out;
       
@@ -646,39 +662,53 @@ class Messaging {
             $output = substr($output, 0, - $backspace);
         }
         
-        if ($total > $this->perpage)
-        {
-            $this->EE->load->library('pagination');
-
-			$config['base_url']		= $basepath;
-			$config['prefix']		= 'P';
-			$config['total_rows'] 	= $total;
-			$config['per_page']		= $this->perpage;
-			$config['cur_page']		= $start;
-			$config['first_link'] 	= $this->EE->lang->line('pag_first_link');
-			$config['last_link'] 	= $this->EE->lang->line('pag_last_link');
-
-			$this->EE->pagination->initialize($config);
-			$pagination_links = $this->EE->pagination->create_links();	
-            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', $pagination_links, $paginate_tagdata);			
-        }
+        if ($this->EE->config->item('app_version') >= 240)
+		{
+	        $this->EE->load->library('pagination');
+	        $pagination = $this->EE->pagination->create(__CLASS__);
+	        $pagination->get_template();
+	        $pagination->per_page = $this->perpage;
+	        $pagination->total_rows = $total;
+	        $pagination->offset = $start;
+	        $pagination->build($pagination->per_page);
+	        $output = $pagination->render($output);
+  		}
         else
         {
-            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', '', $paginate_tagdata);		
-        }
-        
-        switch ($paginate)
-        {
-            case 'top':
-                $output = $paginate_tagdata.$output;
-                break;
-            case 'both':
-                $output = $paginate_tagdata.$output.$paginate_tagdata;
-                break;
-            case 'bottom':
-            default:
-                $output = $output.$paginate_tagdata;
-        }
+	        if ($total > $this->perpage)
+	        {
+	            $this->EE->load->library('pagination');
+	
+				$config['base_url']		= $basepath;
+				$config['prefix']		= 'P';
+				$config['total_rows'] 	= $total;
+				$config['per_page']		= $this->perpage;
+				$config['cur_page']		= $start;
+				$config['first_link'] 	= $this->EE->lang->line('pag_first_link');
+				$config['last_link'] 	= $this->EE->lang->line('pag_last_link');
+	
+				$this->EE->pagination->initialize($config);
+				$pagination_links = $this->EE->pagination->create_links();	
+	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', $pagination_links, $paginate_tagdata);			
+	        }
+	        else
+	        {
+	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', '', $paginate_tagdata);		
+	        }
+	        
+	        switch ($paginate)
+	        {
+	            case 'top':
+	                $output = $paginate_tagdata.$output;
+	                break;
+	            case 'both':
+	                $output = $paginate_tagdata.$output.$paginate_tagdata;
+	                break;
+	            case 'bottom':
+	            default:
+	                $output = $output.$paginate_tagdata;
+	        }
+    	}
         
         return $output;
     }
@@ -1197,7 +1227,12 @@ class Messaging {
     
     function pm_thread()
     {
-    	$message_id = $this->EE->TMPL->fetch_param('message_id');
+    	if ($this->EE->session->userdata('member_id')==0)
+        {
+        	return $this->EE->TMPL->no_results();
+        }
+		
+		$message_id = $this->EE->TMPL->fetch_param('message_id');
     	if ($message_id == '')
     	{
     		return $this->EE->TMPL->no_results();
@@ -1284,6 +1319,370 @@ class Messaging {
     }
     
     
+    //display list of messages in conversation mode
+    function conversations()
+    {
+    	if ($this->EE->session->userdata('member_id')==0)
+        {
+        	return $this->EE->TMPL->no_results();
+        }
+		
+		//do we have folder specified?
+        $folder = ($this->EE->TMPL->fetch_param('folder')!='')?strtolower($this->EE->TMPL->fetch_param('folder')):false;
+        if ($folder===false)
+        {
+            $folder_id = ($this->EE->TMPL->fetch_param('folder_id')!='')?$this->EE->TMPL->fetch_param('folder_id'):1;
+        }
+        
+        $start = 0;
+        $paginate = ($this->EE->TMPL->fetch_param('paginate')=='top')?'top':(($this->EE->TMPL->fetch_param('paginate')=='both')?'both':'bottom');
+        if ($this->EE->TMPL->fetch_param('limit')!='') $this->perpage = $this->EE->TMPL->fetch_param('limit');
+        
+        $basepath = $this->EE->functions->create_url($this->EE->uri->uri_string);
+        $query_string = ($this->EE->uri->page_query_string != '') ? $this->EE->uri->page_query_string : $this->EE->uri->query_string;
+
+		if (preg_match("#^P(\d+)|/P(\d+)#", $query_string, $match))
+		{
+			$start = (isset($match[2])) ? $match[2] : $match[1];
+			$basepath = $this->EE->functions->remove_double_slashes(str_replace($match[0], '', $basepath));
+		}
+		
+		$tagdata = $this->EE->TMPL->tagdata;
+        
+        if ( preg_match_all("/".LD."paginate".RD."(.*?)".LD."\/paginate".RD."/s", $tagdata, $tmp)!=0)
+        {
+            $paginate_tagdata = $tmp[1][0];
+            $tagdata = str_replace($tmp[0][0], '', $tagdata);
+        }
+                
+    	//get all recipient/subject pairs
+    	
+    	
+    	$this->EE->db->select('exp_message_copies.message_id, exp_message_copies.sender_id, exp_message_copies.recipient_id, exp_message_data.message_subject, exp_message_data.message_date');
+		$this->EE->db->from('exp_message_copies');
+        $this->EE->db->join('exp_message_data', 'exp_message_copies.message_id = exp_message_data.message_id', 'left');
+        //recipient is current member
+        $this->EE->db->where('exp_message_copies.recipient_id', $this->EE->session->userdata('member_id'));
+        $this->EE->db->or_where('exp_message_copies.sender_id', $this->EE->session->userdata('member_id'));
+        //exclude 'self-copies', they are of no use to us
+        $this->EE->db->where('exp_message_copies.sender_id != ', $this->EE->session->userdata('member_id'));
+        
+        //limit to certain folder?
+        if ($this->EE->TMPL->fetch_param('combined')!==false)
+        {
+	        if ($folder == 'trash' || $folder == 'deleted' || (isset($folder_id) && $folder_id == 0))
+			{
+				$this->EE->db->where('exp_message_copies.message_deleted', 'y');
+			}
+			else
+			{
+	            if (!isset($folder_id))
+	            {
+	                //inbox - 1
+	                //deleted - 0
+	                //sent - 2
+	                switch ($folder)
+	                {
+	                    case 'inbox':
+	                        $folder_id = 1;
+	                        break;
+	                    case 'sent':
+	                        $folder_id = 2;
+	                        break;
+	                    case 'deleted':
+	                    case 'trash':
+	                        $folder_id = 0;
+	                        break;
+	                    default:
+	                        $sql = "SELECT * FROM exp_message_folders WHERE member_id=".$this->EE->session->userdata('member_id');
+	                        $q = $this->EE->db->query($sql);
+	                        $my_folders = $q->result_array();
+	                        foreach ($my_folders[0] as $key=>$val)
+	                        {
+	                            if (strtolower($val) == $folder)
+	                            {
+	                                $folder_id = str_replace('folder', '', str_replace('_name', '', $key));
+	                                break;
+	                            }
+	                        }
+	                        break;
+	                }
+	            }
+	            if (!isset($folder_id))
+	            {
+	                $this->EE->db->stop_cache();
+	                $this->EE->db->flush_cache();
+	                return $this->EE->TMPL->no_results();
+	            }
+	            $this->EE->db->where('exp_message_copies.message_folder', $folder_id);
+	            $this->EE->db->where('exp_message_copies.message_deleted', 'n');
+   			}
+		}		
+		else
+		{
+			$this->EE->db->where('exp_message_copies.message_deleted', 'n');
+		}
+		
+		$this->EE->db->order_by('message_date', 'desc');
+		
+        $q = $this->EE->db->get();
+    	
+    	if ($q->num_rows()==0)
+    	{
+    		return $this->EE->TMPL->no_results();
+    	}
+    	
+    	$conversations = array();
+    	$conversations_data = array();
+    	
+    	foreach ($q->result_array() as $row)
+    	{
+    		if (strpos($row['message_subject'], "Re: ")===0)
+	    	{
+	    		$row['message_subject'] = substr($row['message_subject'], 4);
+    		}
+			$index = $row['sender_id']."::".$row['recipient_id']."::".$row['message_subject'];
+			$alt_index = $row['recipient_id']."::".$row['sender_id']."::".$row['message_subject'];
+			if (!isset($conversations[$index]) && !isset($conversations[$alt_index]))
+			{
+				$conversations[$index] = $row['message_id'];
+				$conversations_data[$row['message_id']] = $row;
+			}
+    	}
+    	
+    	$total = count($conversations);
+    	if ($total>$this->perpage)
+    	{
+    		$conversations = array_slice($conversations, $start, $this->perpage);
+    	}
+     	
+     	$out = '';
+		$i = 0;
+		
+		if ($this->EE->TMPL->fetch_param('backspace')!='')
+        {
+            $backspace = intval($this->EE->TMPL->fetch_param('backspace'));
+            unset($this->EE->TMPL->tagparams['backspace']);
+        }
+     	
+     	foreach ($conversations as $idx=>$message_id)
+     	{
+			$i++;
+			$row_tagdata =  $this->EE->TMPL->swap_var_single('conversation_count', $i, $tagdata);
+			$row_tagdata =  $this->EE->TMPL->swap_var_single('conversation_absolute_count', $start+$i, $row_tagdata);
+			$row_tagdata =  $this->EE->TMPL->swap_var_single('conversation_total_results', $total, $row_tagdata);
+			$row_tagdata =  $this->EE->TMPL->swap_var_single('subject', $conversations_data[$message_id]['message_subject'], $row_tagdata);
+			$query = $this->EE->db->select('exp_message_copies.message_status, exp_message_copies.message_id, exp_message_copies.message_received, exp_message_copies.message_read, exp_message_copies.copy_id,  exp_message_data.sender_id,  exp_message_data.message_date,  exp_message_data.message_subject, exp_message_data.message_body, exp_message_data.message_recipients, exp_message_data.message_cc, exp_message_data.message_attachments, sender.screen_name AS sender_screen_name, sender.username AS sender_username, sender.email AS sender_email, sender.avatar_filename AS sender_avatar_filename, sender.photo_filename AS sender_photo_filename, recipient.member_id AS recipient_member_id, recipient.screen_name AS recipient_screen_name, recipient.username AS recipient_username, recipient.email AS recipient_email, recipient.avatar_filename AS recipient_avatar_filename, recipient.photo_filename AS recipient_photo_filename')
+					->from('exp_message_copies')
+					->join('exp_message_data', 'exp_message_copies.message_id = exp_message_data.message_id', 'left')
+					->join('exp_members AS recipient', 'recipient.member_id = exp_message_copies.recipient_id', 'left')	
+					->join('exp_members AS sender', 'sender.member_id = exp_message_copies.sender_id', 'left')					
+					->where("message_subject LIKE '%".$this->EE->db->escape_str($conversations_data[$message_id]['message_subject'])."' AND ((exp_message_copies.sender_id={$conversations_data[$message_id]['sender_id']} AND exp_message_copies.recipient_id={$conversations_data[$message_id]['recipient_id']}) OR (exp_message_copies.sender_id={$conversations_data[$message_id]['recipient_id']} AND exp_message_copies.recipient_id={$conversations_data[$message_id]['sender_id']}))")
+					->order_by('message_date', 'desc')
+					->get();
+			$j = 0;
+			
+			if ( preg_match_all("/".LD."conversation.*?(backspace=[\"|'](\d+?)[\"|'])?".RD."(.*?)".LD."\/conversation".RD."/s", $row_tagdata, $tmp)!=0)
+	        {
+	            $conversation_tagdata_orig = $tmp[3][0];
+	            $backspace_var = $tmp[2][0];
+                $conversation_out = '';
+	        }
+			
+			foreach ($query->result_array() as $row)
+			{
+				$j++; 
+				$row_tagdata =  $this->EE->TMPL->swap_var_single('last_message_id', $row['copy_id'], $row_tagdata);
+				$row_tagdata =  $this->EE->TMPL->swap_var_single('last_sender_member_id', $row['sender_id'], $row_tagdata);
+				$row_tagdata =  $this->EE->TMPL->swap_var_single('last_sender_username', $row['sender_username'], $row_tagdata);
+				$row_tagdata =  $this->EE->TMPL->swap_var_single('last_sender_screen_name', $row['sender_screen_name'], $row_tagdata);
+				$row_tagdata =  $this->EE->TMPL->swap_var_single('last_sender_email', $row['sender_email'], $row_tagdata);
+				$avatar_url = ($row['sender_avatar_filename'] != '') ? $this->EE->config->slash_item('avatar_url').$row['sender_avatar_filename'] : '';
+		        $row_tagdata = $this->EE->TMPL->swap_var_single('last_sender_avatar_url', $avatar_url, $row_tagdata);
+		        $photo_url = ($row['sender_photo_filename'] != '') ? $this->EE->config->slash_item('photo_url').$row['sender_photo_filename'] : '';
+		        $row_tagdata = $this->EE->TMPL->swap_var_single('last_sender_photo_url', $photo_url, $row_tagdata);
+		        $row_tagdata =  $this->EE->TMPL->swap_var_single('last_recipient_member_id', $row['recipient_member_id'], $row_tagdata);
+				$row_tagdata =  $this->EE->TMPL->swap_var_single('last_recipient_username', $row['recipient_username'], $row_tagdata);
+				$row_tagdata =  $this->EE->TMPL->swap_var_single('last_recipient_screen_name', $row['recipient_screen_name'], $row_tagdata);
+				$row_tagdata =  $this->EE->TMPL->swap_var_single('last_recipient_email', $row['recipient_email'], $row_tagdata);
+				$avatar_url = ($row['recipient_avatar_filename'] != '') ? $this->EE->config->slash_item('avatar_url').$row['recipient_avatar_filename'] : '';
+		        $row_tagdata = $this->EE->TMPL->swap_var_single('last_recipient_avatar_url', $avatar_url, $row_tagdata);
+		        $photo_url = ($row['recipient_photo_filename'] != '') ? $this->EE->config->slash_item('photo_url').$row['recipient_photo_filename'] : '';
+		        $row_tagdata = $this->EE->TMPL->swap_var_single('last_recipient_photo_url', $photo_url, $row_tagdata);
+		        if (preg_match_all("#".LD."last_message_date format=[\"|'](.+?)[\"|']".RD."#", $row_tagdata, $matches))
+				{
+		            foreach ($matches['1'] as $match)
+					{
+						$row_tagdata = preg_replace("#".LD."last_message_date format=.+?".RD."#", $this->EE->localize->decode_date($match, $row['message_date']), $row_tagdata, true);
+					}
+				}
+				
+				if (isset($conversation_out))
+				{
+					$conversation_tagdata = $conversation_tagdata_orig;
+                    
+                    $cond = array();
+		            $conversation_tagdata = $this->EE->TMPL->swap_var_single('count', $j, $conversation_tagdata);
+		            $cond['read'] = false;
+		            $cond['unread'] = true;
+		            $cond['replied'] = false;
+		            $cond['forwarded'] = false;
+		            if ($row['message_read']=='y')
+		            {
+		                $cond['read'] = true;
+		                $cond['unread'] = false;
+		            }
+		            if ($row['message_status']=='replied') 
+		            {
+		                $cond['replied'] = true;
+		            }
+		            if ($row['message_status']=='forwarded') 
+		            {
+		                $cond['forwarded'] = true;
+		            }
+		            $conversation_tagdata = $this->EE->TMPL->swap_var_single('message_id', $row['copy_id'], $conversation_tagdata);
+		            $conversation_tagdata = $this->EE->TMPL->swap_var_single('sender_member_id', $row['sender_id'], $conversation_tagdata);
+		            $conversation_tagdata = $this->EE->TMPL->swap_var_single('sender_username', $row['sender_username'], $conversation_tagdata);
+		            $conversation_tagdata = $this->EE->TMPL->swap_var_single('sender_screen_name', $row['sender_screen_name'], $conversation_tagdata);
+		            $conversation_tagdata = $this->EE->TMPL->swap_var_single('sender_email', $row['sender_email'], $conversation_tagdata);
+		            $avatar_url = ($row['sender_avatar_filename'] != '') ? $this->EE->config->slash_item('avatar_url').$row['sender_avatar_filename'] : '';
+		            $conversation_tagdata = $this->EE->TMPL->swap_var_single('sender_avatar_url', $avatar_url, $conversation_tagdata);
+		            $photo_url = ($row['sender_photo_filename'] != '') ? $this->EE->config->slash_item('photo_url').$row['sender_photo_filename'] : '';
+		            $conversation_tagdata = $this->EE->TMPL->swap_var_single('sender_photo_url', $photo_url, $conversation_tagdata);
+		            $conversation_tagdata = $this->EE->TMPL->swap_var_single('recipient_member_id', $row['recipient_member_id'], $conversation_tagdata);
+		            $conversation_tagdata = $this->EE->TMPL->swap_var_single('recipient_username', $row['recipient_username'], $conversation_tagdata);
+		            $conversation_tagdata = $this->EE->TMPL->swap_var_single('recipient_screen_name', $row['recipient_screen_name'], $conversation_tagdata);
+		            $conversation_tagdata = $this->EE->TMPL->swap_var_single('recipient_email', $row['recipient_email'], $conversation_tagdata);
+		            $avatar_url = ($row['recipient_avatar_filename'] != '') ? $this->EE->config->slash_item('avatar_url').$row['recipient_avatar_filename'] : '';
+		            $conversation_tagdata = $this->EE->TMPL->swap_var_single('recipient_avatar_url', $avatar_url, $conversation_tagdata);
+		            $photo_url = ($row['recipient_photo_filename'] != '') ? $this->EE->config->slash_item('photo_url').$row['recipient_photo_filename'] : '';
+		            $conversation_tagdata = $this->EE->TMPL->swap_var_single('recipient_photo_url', $photo_url, $conversation_tagdata);
+
+		            if (preg_match_all("#".LD."message_date format=[\"|'](.+?)[\"|']".RD."#", $conversation_tagdata, $matches))
+		    		{
+		    			foreach ($matches['1'] as $match)
+		    			{
+		    				$conversation_tagdata = preg_replace("#".LD."message_date format=.+?".RD."#", $this->EE->localize->decode_date($match, $row['message_date']), $conversation_tagdata, true);
+		    			}
+		    		}
+		            
+		            //if message body is displayed we update the status
+		            if (strpos($conversation_tagdata, LD.'message'.RD)!==false && isset($row['message_body']))
+		            {
+		                   
+		                $message = $this->EE->typography->parse_type(stripslashes($row['message_body']), 
+		    									 		 								  array(
+		    									 		 								  'text_format'	=> 'xhtml',
+		    									 		 								  'html_format'	=> $this->EE->config->item('prv_msg_html_format'),
+		    									 		 								  'auto_links'	=> $this->EE->config->item('prv_msg_auto_links'),
+		    									 		 								  'allow_img_url' => 'y'
+		    									 		 								 ));
+		                $conversation_tagdata = $this->EE->TMPL->swap_var_single('message', $message, $conversation_tagdata);
+		
+		                if ($row['message_read']!='y' && $this->EE->TMPL->fetch_param('mark_read')!='no' && $row['recipient_member_id']==$this->EE->session->userdata('member_id'))
+		                {
+		                    $data = array();
+		                    $data['message_read'] = 'y';
+		                    $data['message_time_read'] = $this->EE->localize->now;
+		                    $this->EE->db->where('copy_id', $row['copy_id']);
+		                    $this->EE->db->update('message_copies', $data);
+		                    $this->EE->session->userdata['private_messages']--;
+		                    $this->EE->db->where('member_id', $this->EE->session->userdata('member_id'));
+		                    $this->EE->db->update('members', array('private_messages'=>$this->EE->session->userdata['private_messages']));
+		                }
+		            }
+		            
+		            if ($row['message_attachments']=='y') 
+		            {
+		                $cond['has_attachment'] = true;
+		                $cond['has_attachments'] = true;
+		            }
+		            else
+		            {
+		                $cond['has_attachment'] = false;
+		                $cond['has_attachments'] = false;
+		            }
+                    
+                    $conversation_tagdata = $this->EE->functions->prep_conditionals($conversation_tagdata, $cond);
+                                        
+                    $conversation_out .= $conversation_tagdata;
+				}
+				
+			}
+			
+			if (isset($conversation_out))
+			{
+				$conversation_out = trim($conversation_out);
+	            $conversation_out	= substr($conversation_out, 0, strlen($conversation_out)-$backspace_var);
+	            
+	            $row_tagdata = str_replace($tmp[0][0], $conversation_out, $row_tagdata);
+    		}
+			
+			$row_tagdata =  $this->EE->TMPL->swap_var_single('messages_in_conversation', $j, $row_tagdata);
+			
+					
+
+			$out .= $row_tagdata;
+		}
+		
+		if (isset($backspace))
+        {
+            $out = substr($out, 0, - $backspace);
+        }
+        
+        if ($this->EE->config->item('app_version') >= 240)
+		{
+	        $this->EE->load->library('pagination');
+	        $pagination = $this->EE->pagination->create(__CLASS__);
+	        $pagination->get_template();
+	        $pagination->per_page = $this->perpage;
+	        $pagination->total_rows = $total;
+	        $pagination->offset = $start;
+	        $pagination->build($pagination->per_page);
+	        $out = $pagination->render($out);
+  		}
+  		else
+  		{
+
+	        if ($total > $this->perpage)
+	        {
+	            $this->EE->load->library('pagination');
+	
+				$config['base_url']		= $basepath;
+				$config['prefix']		= 'P';
+				$config['total_rows'] 	= $total;
+				$config['per_page']		= $this->perpage;
+				$config['cur_page']		= $start;
+				$config['first_link'] 	= $this->EE->lang->line('pag_first_link');
+				$config['last_link'] 	= $this->EE->lang->line('pag_last_link');
+	
+				$this->EE->pagination->initialize($config);
+				$pagination_links = $this->EE->pagination->create_links();	
+	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', $pagination_links, $paginate_tagdata);			
+	        }
+	        else
+	        {
+	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', '', $paginate_tagdata);		
+	        }
+	        
+	        switch ($paginate)
+	        {
+	            case 'top':
+	                $out = $paginate_tagdata.$out;
+	                break;
+	            case 'both':
+	                $out = $paginate_tagdata.$out.$paginate_tagdata;
+	                break;
+	            case 'bottom':
+	            default:
+	                $out = $out.$paginate_tagdata;
+	        }
+	        
+    	}
+
+    	return $out;
+    }
+    
     
     function pm()
     {
@@ -1300,7 +1699,12 @@ class Messaging {
     //display all private messages
     function private_messages($message_id=false, $tagdata='')
     {
-        //do we have folder specified?
+        if ($this->EE->session->userdata('member_id')==0)
+        {
+        	return $this->EE->TMPL->no_results();
+        }
+		
+		//do we have folder specified?
         $folder = ($this->EE->TMPL->fetch_param('folder')!='')?strtolower($this->EE->TMPL->fetch_param('folder')):false;
         if ($folder===false)
         {
@@ -1760,48 +2164,64 @@ class Messaging {
             $out = substr($out, 0, - $backspace);
         }
         
-        if ($total > $this->perpage)
-        {
-            $this->EE->load->library('pagination');
-
-			$config['base_url']		= $basepath;
-			$config['prefix']		= 'P';
-			$config['total_rows'] 	= $total;
-			$config['per_page']		= $this->perpage;
-			$config['cur_page']		= $start;
-			$config['first_link'] 	= $this->EE->lang->line('pag_first_link');
-			$config['last_link'] 	= $this->EE->lang->line('pag_last_link');
-
-			$this->EE->pagination->initialize($config);
-			$pagination_links = $this->EE->pagination->create_links();	
-            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', $pagination_links, $paginate_tagdata);			
-        }
-        else
-        {
-            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', '', $paginate_tagdata);		
-        }
+        if ($this->EE->config->item('app_version') >= 240)
+		{
+	        $this->EE->load->library('pagination');
+	        $pagination = $this->EE->pagination->create(__CLASS__);
+	        $pagination->get_template();
+	        $pagination->per_page = $this->perpage;
+	        $pagination->total_rows = $total;
+	        $pagination->offset = $start;
+	        $pagination->build($pagination->per_page);
+	        $out = $pagination->render($out);
+  		}
+  		else
+  		{
         
-        switch ($paginate)
-        {
-            case 'top':
-                $out = $paginate_tagdata.$out;
-                break;
-            case 'both':
-                $out = $paginate_tagdata.$out.$paginate_tagdata;
-                break;
-            case 'bottom':
-            default:
-                $out = $out.$paginate_tagdata;
-        }
-        
-        if ($this->EE->TMPL->fetch_param('form')=='yes')
-        {
-            return $this->_form($out, 'move_pm');
-        }
-        else
-        {
-            return $out;
-        }
+	        if ($total > $this->perpage)
+	        {
+	            $this->EE->load->library('pagination');
+	
+				$config['base_url']		= $basepath;
+				$config['prefix']		= 'P';
+				$config['total_rows'] 	= $total;
+				$config['per_page']		= $this->perpage;
+				$config['cur_page']		= $start;
+				$config['first_link'] 	= $this->EE->lang->line('pag_first_link');
+				$config['last_link'] 	= $this->EE->lang->line('pag_last_link');
+	
+				$this->EE->pagination->initialize($config);
+				$pagination_links = $this->EE->pagination->create_links();	
+	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', $pagination_links, $paginate_tagdata);			
+	        }
+	        else
+	        {
+	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', '', $paginate_tagdata);		
+	        }
+	        
+	        switch ($paginate)
+	        {
+	            case 'top':
+	                $out = $paginate_tagdata.$out;
+	                break;
+	            case 'both':
+	                $out = $paginate_tagdata.$out.$paginate_tagdata;
+	                break;
+	            case 'bottom':
+	            default:
+	                $out = $out.$paginate_tagdata;
+	        }
+	        
+	        if ($this->EE->TMPL->fetch_param('form')=='yes')
+	        {
+	            return $this->_form($out, 'move_pm');
+	        }
+	        else
+	        {
+	            return $out;
+	        }
+	        
+    	}
         
     }
     
@@ -2806,7 +3226,14 @@ class Messaging {
                 
         $storage_limit	= ($this->EE->session->userdata('group_id') == 1) ? '&#8734;' : $this->EE->session->userdata('prv_msg_storage_limit');
         $tagdata = $this->EE->TMPL->swap_var_single('messages_limit', $storage_limit, $tagdata);
-        $tagdata = $this->EE->TMPL->swap_var_single('messages_total', $this->EE->session->userdata('private_messages'), $tagdata);
+        $tagdata = $this->EE->TMPL->swap_var_single('messages_unread', $this->EE->session->userdata('private_messages'), $tagdata);
+        if (strpos($tagdata, LD.'messages_total'.RD)!==false)
+        {
+        	$this->EE->db->from('message_copies');
+	        $this->EE->db->where('recipient_id', $this->EE->session->userdata('member_id'));
+	        $count = $this->EE->db->count_all_results(); 
+	        $tagdata = $this->EE->TMPL->swap_var_single('messages_total', $count, $tagdata);
+        }
         $tagdata = $this->EE->TMPL->swap_var_single('send_limit', $this->EE->session->userdata('prv_msg_send_limit'), $tagdata);
         $messages_percent = ($this->EE->session->userdata('group_id') == 1) ? 0 : round((100*$this->EE->session->userdata('private_messages')/$this->EE->session->userdata('prv_msg_storage_limit')),2);
         $tagdata = $this->EE->TMPL->swap_var_single('messages_percent', $messages_percent, $tagdata);
