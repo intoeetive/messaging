@@ -183,7 +183,14 @@ class Messaging {
         if ($this->EE->config->item('app_version') >= 240)
 		{
 	        $this->EE->load->library('pagination');
-	        $pagination = $this->EE->pagination->create(__CLASS__);
+	        if ($this->EE->config->item('app_version') >= 260)
+	        {
+	        	$pagination = $this->EE->pagination->create(__CLASS__);
+	        }
+	        else
+	        {
+	        	$pagination = new Pagination_object(__CLASS__);
+	        }
 	        $pagination->get_template();
 	        $pagination->per_page = $this->perpage;
 	        $pagination->total_rows = $total;
@@ -665,7 +672,14 @@ class Messaging {
         if ($this->EE->config->item('app_version') >= 240)
 		{
 	        $this->EE->load->library('pagination');
-	        $pagination = $this->EE->pagination->create(__CLASS__);
+	        if ($this->EE->config->item('app_version') >= 260)
+	        {
+	        	$pagination = $this->EE->pagination->create(__CLASS__);
+	        }
+	        else
+	        {
+	        	$pagination = new Pagination_object(__CLASS__);
+	        }
 	        $pagination->get_template();
 	        $pagination->per_page = $this->perpage;
 	        $pagination->total_rows = $total;
@@ -1633,7 +1647,14 @@ class Messaging {
         if ($this->EE->config->item('app_version') >= 240)
 		{
 	        $this->EE->load->library('pagination');
-	        $pagination = $this->EE->pagination->create(__CLASS__);
+	        if ($this->EE->config->item('app_version') >= 260)
+	        {
+	        	$pagination = $this->EE->pagination->create(__CLASS__);
+	        }
+	        else
+	        {
+	        	$pagination = new Pagination_object(__CLASS__);
+	        }
 	        $pagination->get_template();
 	        $pagination->per_page = $this->perpage;
 	        $pagination->total_rows = $total;
@@ -2167,7 +2188,14 @@ class Messaging {
         if ($this->EE->config->item('app_version') >= 240)
 		{
 	        $this->EE->load->library('pagination');
-	        $pagination = $this->EE->pagination->create(__CLASS__);
+	        if ($this->EE->config->item('app_version') >= 260)
+	        {
+	        	$pagination = $this->EE->pagination->create(__CLASS__);
+	        }
+	        else
+	        {
+	        	$pagination = new Pagination_object(__CLASS__);
+	        }
 	        $pagination->get_template();
 	        $pagination->per_page = $this->perpage;
 	        $pagination->total_rows = $total;
