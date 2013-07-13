@@ -1501,6 +1501,12 @@ class Messaging {
 	            $conversation_tagdata_orig = $tmp[3][0];
 	            $backspace_var = $tmp[2][0];
                 $conversation_out = '';
+                
+                $this->EE->load->library('typography');
+	            $this->EE->typography->initialize(array(
+	                'highlight_code'	=> TRUE)
+	            );
+                
 	        }
 			
 			foreach ($query->result_array() as $row)
@@ -1584,7 +1590,8 @@ class Messaging {
 		            if (strpos($conversation_tagdata, LD.'message'.RD)!==false && isset($row['message_body']))
 		            {
 		                   
-		                $message = $this->EE->typography->parse_type(stripslashes($row['message_body']), 
+		                
+						$message = $this->EE->typography->parse_type(stripslashes($row['message_body']), 
 		    									 		 								  array(
 		    									 		 								  'text_format'	=> 'xhtml',
 		    									 		 								  'html_format'	=> $this->EE->config->item('prv_msg_html_format'),
@@ -1632,12 +1639,12 @@ class Messaging {
 	            $row_tagdata = str_replace($tmp[0][0], $conversation_out, $row_tagdata);
     		}
 			
-			$row_tagdata =  $this->EE->TMPL->swap_var_single('messages_in_conversation', $j, $row_tagdata);
-			
-					
+			$row_tagdata =  $this->EE->TMPL->swap_var_single('messages_in_conversation', $j, $row_tagdata);					
 
 			$out .= $row_tagdata;
 		}
+		
+		$out = $this->EE->TMPL->parse_globals($out);
 		
 		if (isset($backspace))
         {
@@ -2239,17 +2246,16 @@ class Messaging {
 	            default:
 	                $out = $out.$paginate_tagdata;
 	        }
-	        
-	        if ($this->EE->TMPL->fetch_param('form')=='yes')
-	        {
-	            return $this->_form($out, 'move_pm');
-	        }
-	        else
-	        {
-	            return $out;
-	        }
-	        
     	}
+	        
+        if ($this->EE->TMPL->fetch_param('form')=='yes')
+        {
+            return $this->_form($out, 'move_pm');
+        }
+        else
+        {
+            return $out;
+        }
         
     }
     
