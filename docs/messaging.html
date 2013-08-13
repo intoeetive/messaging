@@ -606,13 +606,15 @@ Move selected messages: {folder_select} &lt;input type="submit" name="move" valu
 <ul>
 <li><dfn>message_id</dfn> &mdash; ID of any message that is part of this conversation thread. Required</li>
 <li><dfn>sort="asc"</dfn> &mdash; sorting order. By default, the latest message is diplayed first. Set this parameter if you want oldest messages to be displayed first.</li>
+<li><dfn>limit</dfn> &mdash; number of bulletins per page (if you have many messages and want to use pagination)</li>
+<li><dfn>paginate</dfn> &mdash; place to display pagination links. Can be 'top', 'bottom' or 'both'. Defaults to 'bottom'</li>
 <li><dfn>backspace="X"</dfn> &mdash; remove X last characters from tag output result</li>
 <li><dfn>form="yes"</dfn> &mdash; if set, creates form for moving/deleting messages around all data displayed and parses {folder_select} variable</li>
 <li><dfn>ajax="yes"</dfn> &mdash; turn on AJAX mode for moving/deleting form and links. The success or error messages shown upon submit will be shown as simple text, without using message templates.</li>
 </ul>
 </p>
 
-<p>All variables presented by {exp:messaging:private_messages} are available with this tag as well. Additionally, followinf conditional can be used:
+<p>All variables presented by {exp:messaging:private_messages} are available with this tag as well. Additionally, following conditional can be used:
 <ul>
 <li><dfn>{if current_message}{/if}</dfn> &mdash; idenifies current (selected) message</li>
 </ul>

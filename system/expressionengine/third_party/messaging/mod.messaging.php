@@ -62,7 +62,7 @@ class Messaging {
 		if (preg_match("#^P(\d+)|/P(\d+)#", $query_string, $match))
 		{
 			$start = (isset($match[2])) ? $match[2] : $match[1];
-			$basepath = $this->EE->functions->remove_double_slashes(str_replace($match[0], '', $basepath));
+			$basepath = reduce_double_slashes(str_replace($match[0], '', $basepath));
 		}
         
         $this->EE->db->start_cache();
@@ -145,7 +145,7 @@ class Messaging {
     		{
                 foreach ($matches['1'] as $match)
     			{
-    				$tagdata = preg_replace("#".LD."message_date format=.+?".RD."#", $this->EE->localize->decode_date($match, $row['bulletin_date']), $tagdata, true);
+    				$tagdata = preg_replace("#".LD."message_date format=.+?".RD."#", $this->_format_date($match, $row['bulletin_date']), $tagdata, true);
     			}
     		}
             
@@ -547,7 +547,7 @@ class Messaging {
 		if (preg_match("#^P(\d+)|/P(\d+)#", $query_string, $match))
 		{
 			$start = (isset($match[2])) ? $match[2] : $match[1];
-			$basepath = $this->EE->functions->remove_double_slashes(str_replace($match[0], '', $basepath));
+			$basepath = reduce_double_slashes(str_replace($match[0], '', $basepath));
 		}
 		
 		$this->EE->db->select('COUNT(*) AS cnt')
@@ -1293,13 +1293,35 @@ class Messaging {
 	    		$messages[] = $row['message_id'];
 	    	}
 		}
+		
+		$total = count($messages);
+		$start = 0;
+        $paginate = ($this->EE->TMPL->fetch_param('paginate')=='top')?'top':(($this->EE->TMPL->fetch_param('paginate')=='both')?'both':'bottom');
+        if ($this->EE->TMPL->fetch_param('limit')!='') $this->perpage = $this->EE->TMPL->fetch_param('limit');
+        
+        $basepath = $this->EE->functions->create_url($this->EE->uri->uri_string);
+        $query_string = ($this->EE->uri->page_query_string != '') ? $this->EE->uri->page_query_string : $this->EE->uri->query_string;
 
-
+		if (preg_match("#^P(\d+)|/P(\d+)#", $query_string, $match))
+		{
+			$start = (isset($match[2])) ? $match[2] : $match[1];
+			$basepath = reduce_double_slashes(str_replace($match[0], '', $basepath));
+		}
+        
+        $tagdata = $this->EE->TMPL->swap_var_single('total_results', $total, $this->EE->TMPL->tagdata);
+        $paginate_tagdata = '';
+        
+        if ( preg_match_all("/".LD."paginate".RD."(.*?)".LD."\/paginate".RD."/s", $tagdata, $tmp)!=0)
+        {
+            $paginate_tagdata = $tmp[1][0];
+            $tagdata = str_replace($tmp[0][0], '', $tagdata);
+        }
 
     	$query = $this->EE->db->select('copy_id')
 					->from('exp_message_copies')
 					->where('recipient_id', $this->EE->session->userdata('member_id'))
 					->where_in('message_id', $messages)
+					->limit($this->perpage, $start)
 					->get();
 							
 		$out = '';
@@ -1315,9 +1337,8 @@ class Messaging {
 		foreach ($query->result_array() as $row)
 		{
 			$i++;
-			$tmp =  $this->EE->TMPL->swap_var_single('count', $i, $this->EE->TMPL->tagdata);
+			$tmp =  $this->EE->TMPL->swap_var_single('count', $i, $tagdata);
 			$tmp =  $this->EE->TMPL->swap_var_single('absolute_count', $i, $tmp);
-			$tmp =  $this->EE->TMPL->swap_var_single('total_results', count($messages), $tmp);
 			$tmp =  $this->private_messages($row['copy_id'], $tmp);
 			$cond['current_message'] = ($row['copy_id']==$message_id)?true:false;
 			$tmp = $this->EE->functions->prep_conditionals($tmp, $cond);
@@ -1328,6 +1349,64 @@ class Messaging {
         {
             $out = substr($out, 0, - $backspace);
         }
+        
+        
+        if ($this->EE->config->item('app_version') >= 240)
+		{
+	        $this->EE->load->library('pagination');
+	        if ($this->EE->config->item('app_version') >= 260)
+	        {
+	        	$pagination = $this->EE->pagination->create(__CLASS__);
+	        }
+	        else
+	        {
+	        	$pagination = new Pagination_object(__CLASS__);
+	        }
+	        $pagination->get_template();
+	        $pagination->per_page = $this->perpage;
+	        $pagination->total_rows = $total;
+	        $pagination->offset = $start;
+	        $pagination->build($pagination->per_page);
+	        $out = $pagination->render($out);
+  		}
+  		else
+  		{
+        
+	        if ($total > $this->perpage)
+	        {
+	            $this->EE->load->library('pagination');
+	
+				$config = array();
+				$config['base_url']		= $basepath;
+				$config['prefix']		= 'P';
+				$config['total_rows'] 	= $total;
+				$config['per_page']		= $this->perpage;
+				$config['cur_page']		= $start;
+				$config['first_link'] 	= $this->EE->lang->line('pag_first_link');
+				$config['last_link'] 	= $this->EE->lang->line('pag_last_link');
+	
+				$this->EE->pagination->initialize($config);
+				$pagination_links = $this->EE->pagination->create_links();	
+	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', $pagination_links, $paginate_tagdata);			
+	        }
+	        else
+	        {
+	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', '', $paginate_tagdata);		
+	        }
+	        
+	        switch ($paginate)
+	        {
+	            case 'top':
+	                $out = $paginate_tagdata.$out;
+	                break;
+	            case 'both':
+	                $out = $paginate_tagdata.$out.$paginate_tagdata;
+	                break;
+	            case 'bottom':
+	            default:
+	                $out = $out.$paginate_tagdata;
+	        }
+    	}
         
     	return $out;
     }
@@ -1358,7 +1437,7 @@ class Messaging {
 		if (preg_match("#^P(\d+)|/P(\d+)#", $query_string, $match))
 		{
 			$start = (isset($match[2])) ? $match[2] : $match[1];
-			$basepath = $this->EE->functions->remove_double_slashes(str_replace($match[0], '', $basepath));
+			$basepath = reduce_double_slashes(str_replace($match[0], '', $basepath));
 		}
 		
 		$tagdata = $this->EE->TMPL->tagdata;
@@ -1375,11 +1454,10 @@ class Messaging {
     	$this->EE->db->select('exp_message_copies.message_id, exp_message_copies.sender_id, exp_message_copies.recipient_id, exp_message_data.message_subject, exp_message_data.message_date');
 		$this->EE->db->from('exp_message_copies');
         $this->EE->db->join('exp_message_data', 'exp_message_copies.message_id = exp_message_data.message_id', 'left');
-        //recipient is current member
-        $this->EE->db->where('exp_message_copies.recipient_id', $this->EE->session->userdata('member_id'));
-        $this->EE->db->or_where('exp_message_copies.sender_id', $this->EE->session->userdata('member_id'));
+        //recipient is current member        
         //exclude 'self-copies', they are of no use to us
-        $this->EE->db->where('exp_message_copies.sender_id != ', $this->EE->session->userdata('member_id'));
+        $this->EE->db->where('exp_message_copies.sender_id != exp_message_copies.recipient_id AND (exp_message_copies.recipient_id = '.$this->EE->session->userdata('member_id').' OR exp_message_copies.sender_id = '.$this->EE->session->userdata('member_id').')', null, false);
+        
         
         //limit to certain folder?
         if ($this->EE->TMPL->fetch_param('combined')!==false)
@@ -1533,7 +1611,7 @@ class Messaging {
 				{
 		            foreach ($matches['1'] as $match)
 					{
-						$row_tagdata = preg_replace("#".LD."last_message_date format=.+?".RD."#", $this->EE->localize->decode_date($match, $row['message_date']), $row_tagdata, true);
+						$row_tagdata = preg_replace("#".LD."last_message_date format=.+?".RD."#", $this->_format_date($match, $row['message_date']), $row_tagdata, true);
 					}
 				}
 				
@@ -1582,7 +1660,7 @@ class Messaging {
 		    		{
 		    			foreach ($matches['1'] as $match)
 		    			{
-		    				$conversation_tagdata = preg_replace("#".LD."message_date format=.+?".RD."#", $this->EE->localize->decode_date($match, $row['message_date']), $conversation_tagdata, true);
+		    				$conversation_tagdata = preg_replace("#".LD."message_date format=.+?".RD."#", $this->_format_date($match, $row['message_date']), $conversation_tagdata, true);
 		    			}
 		    		}
 		            
@@ -1727,7 +1805,9 @@ class Messaging {
     //display all private messages
     function private_messages($message_id=false, $tagdata='')
     {
-        if ($this->EE->session->userdata('member_id')==0)
+        $embedded_mode = ($tagdata!='') ? true : false;
+				
+		if ($this->EE->session->userdata('member_id')==0)
         {
         	return $this->EE->TMPL->no_results();
         }
@@ -1762,18 +1842,21 @@ class Messaging {
 		if (preg_match("#^P(\d+)|/P(\d+)#", $query_string, $match))
 		{
 			$start = (isset($match[2])) ? $match[2] : $match[1];
-			$basepath = $this->EE->functions->remove_double_slashes(str_replace($match[0], '', $basepath));
+			$basepath = reduce_double_slashes(str_replace($match[0], '', $basepath));
 		}
         
         $this->EE->db->start_cache();
-        $this->EE->db->select('exp_message_copies.message_status, exp_message_copies.message_id, exp_message_copies.message_received, exp_message_copies.message_read, exp_message_copies.copy_id,  exp_message_data.sender_id,  exp_message_data.message_date,  exp_message_data.message_subject, exp_message_data.message_body, exp_message_data.message_recipients, exp_message_data.message_cc, exp_message_data.message_attachments, exp_members.screen_name, exp_members.username, exp_members.email, exp_members.avatar_filename, exp_members.photo_filename');
+        $this->EE->db->select('exp_message_copies.message_status, exp_message_copies.message_id, exp_message_copies.message_received, exp_message_copies.message_read, exp_message_copies.copy_id,  exp_message_copies.recipient_id, exp_message_data.sender_id,  exp_message_data.message_date,  exp_message_data.message_subject, exp_message_data.message_body, exp_message_data.message_recipients, exp_message_data.message_cc, exp_message_data.message_attachments, exp_members.screen_name, exp_members.username, exp_members.email, exp_members.avatar_filename, exp_members.photo_filename');
 		$this->EE->db->from('exp_message_copies');
         $this->EE->db->join('exp_message_data', 'exp_message_copies.message_id = exp_message_data.message_id', 'left');
         $this->EE->db->join('exp_members', 'exp_members.member_id = exp_message_copies.sender_id', 'left');
-        $this->EE->db->where('exp_message_copies.recipient_id', $this->EE->session->userdata('member_id'));
+        
 		if ($message_id === false)
         {
-    		if ($folder == 'trash' || $folder == 'deleted' || (isset($folder_id) && $folder_id == 0))
+    		
+			$this->EE->db->where('exp_message_copies.recipient_id', $this->EE->session->userdata('member_id'));
+			
+			if ($folder == 'trash' || $folder == 'deleted' || (isset($folder_id) && $folder_id == 0))
     		{
     			$this->EE->db->where('exp_message_copies.message_deleted', 'y');
     		}
@@ -1849,6 +1932,14 @@ class Messaging {
             return $this->EE->TMPL->no_results();
         }
         
+        if ($message_id !== false)
+        {
+            if ($query->row('sender_id') != $this->EE->session->userdata('member_id') && $query->row('recipient_id') != $this->EE->session->userdata('member_id'))
+            {
+            	return $this->EE->TMPL->no_results();
+            }
+        }
+        
         $tagdata_orig = ($tagdata!='') ? $tagdata : $this->EE->TMPL->tagdata;
         
         $tagdata_orig = $this->EE->TMPL->swap_var_single('total_results', $total, $tagdata_orig);
@@ -1917,7 +2008,7 @@ class Messaging {
     		{
     			foreach ($matches['1'] as $match)
     			{
-    				$tagdata = preg_replace("#".LD."message_date format=.+?".RD."#", $this->EE->localize->decode_date($match, $row['message_date']), $tagdata, true);
+    				$tagdata = preg_replace("#".LD."message_date format=.+?".RD."#", $this->_format_date($match, $row['message_date']), $tagdata, true);
     			}
     		}
             
@@ -2192,6 +2283,9 @@ class Messaging {
             $out = substr($out, 0, - $backspace);
         }
         
+        if ($embedded_mode==false)
+        {
+        
         if ($this->EE->config->item('app_version') >= 240)
 		{
 	        $this->EE->load->library('pagination');
@@ -2246,6 +2340,8 @@ class Messaging {
 	            default:
 	                $out = $out.$paginate_tagdata;
 	        }
+    	}
+    	
     	}
 	        
         if ($this->EE->TMPL->fetch_param('form')=='yes')
@@ -2358,8 +2454,15 @@ class Messaging {
 		    		$original_subject = substr($original_subject, 5);
 		    	}
                 $original_body = $original_q->row('message_body');
-                $dvar = $this->EE->localize->fetch_date_params("%Y-%m-%d %H:%i");
-                $original_date = str_replace($dvar, $this->EE->localize->convert_timestamp($dvar, $original_q->row('message_date'), TRUE), "%Y-%m-%d %H:%i");
+                if ($this->EE->config->item('app_version') < 260)
+	        	{
+	                $dvar = $this->EE->localize->fetch_date_params("%Y-%m-%d %H:%i");
+	                $original_date = str_replace($dvar, $this->EE->localize->convert_timestamp($dvar, $original_q->row('message_date'), TRUE), "%Y-%m-%d %H:%i");
+          		}
+          		else
+          		{
+          			$original_date = $this->EE->localize->format_date("%Y-%m-%d %H:%i", $original_q->row('message_date'), TRUE);
+          		}
                 $original_author = $original_q->row('screen_name');
             }
         }
@@ -3013,8 +3116,8 @@ class Messaging {
 			$copy_data['message_time_read']		= $this->EE->localize->now;  // Already read automatically
 			$this->EE->db->insert('exp_message_copies', $copy_data);
 			
-			$this->EE->db->query("UPDATE exp_members SET private_messages = private_messages + 1
-					WHERE member_id=".$this->EE->session->userdata('member_id'));
+			//$this->EE->db->query("UPDATE exp_members SET private_messages = private_messages + 1
+			//		WHERE member_id=".$this->EE->session->userdata('member_id'));
 		}
 		
 		if ($this->EE->input->get_post('replying') !== FALSE || $this->EE->input->get_post('forwarding') !== FALSE)
@@ -3758,6 +3861,19 @@ class Messaging {
         $out = $this->EE->functions->form_declaration($data).$tagdata."\n"."</form>";
         
         return $out;
+    }
+    
+    
+    function _format_date($one='', $two='', $three=false)
+    {
+    	if ($this->EE->config->item('app_version')>=260)
+    	{
+			return $this->EE->localize->format_date($one, $two, $three);
+		}
+		else
+		{
+			return $this->EE->localize->decode_date($one, $two, $three);
+		}
     }
 
 
