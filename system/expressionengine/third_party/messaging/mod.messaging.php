@@ -3212,7 +3212,7 @@ class Messaging {
 			}
 		}
 		
-		
+		unset($_SESSION['messaging']);    
         
         if ($this->EE->input->get_post('ajax')=='yes')
         {
@@ -3221,7 +3221,7 @@ class Messaging {
         }
         
         $return = ($this->EE->input->get_post('RET')!==false)?$this->EE->input->get_post('RET'):$this->EE->config->item('site_url');    
-        unset($_SESSION['messaging']);    
+        
         
         if ($this->EE->input->get_post('skip_success_message')=='y')
         {
@@ -3864,7 +3864,7 @@ class Messaging {
     }
     
     
-    function _format_date($one='', $two='', $three=false)
+    function _format_date($one='', $two='', $three=true)
     {
     	if ($this->EE->config->item('app_version')>=260)
     	{
