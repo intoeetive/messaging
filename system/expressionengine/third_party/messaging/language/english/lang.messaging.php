@@ -108,6 +108,15 @@ $lang = array(
 'guest'	=>
 'Guest',
 
+'attachment_problem'	=> 
+'There was a problem attaching your file.',
+
+'empty_trash' =>
+'Empty Trash',
+
+'trash_empty' =>
+'Your Trash folder is already empty',
+
 /* END */
 ''=>''
 );

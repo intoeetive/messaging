@@ -54,6 +54,7 @@
             <li><a href="#pm-message">View PM</a></li>
             <li><a href="#pm-move">Moving and deleting messages</a></li>
             <li><a href="#pm-author">Message author</a></li>
+            <li><a href="#pm-recipients">Message recipients</a></li>
             <li><a href="#pm-folders">Message folders list</a></li>
             <li><a href="#pm-folderedit">Editing folders</a></li>
             <li><a href="#pm-info">Member's general PM info</a></li>
@@ -232,7 +233,7 @@ Message from &lt;a href="{path=member/profile/{sender_member_id}}"&gt;{sender_sc
 </p>
 <p><strong>Form tag parameters:</strong>
 <ul>
-<li><dfn>replying</dfn> &mdash; If you are replying to message, set the value of this parameter to ID of message you're replying to, e.g. replying="143". It will mark the original message in your list as 'replied'. In order to get screen name of original message author (and use as recipient) use <a href="#pm-author">{exp:messaging:author}</a> tag</li>
+<li><dfn>replying</dfn> &mdash; If you are replying to message, set the value of this parameter to ID of message you're replying to, e.g. replying="143". It will mark the original message in your list as 'replied'. In order to get screen name of original message author (and use as recipient) use <a href="#pm-author">{exp:messaging:author}</a> tag. In order to get recipients of original messages (to use as CC if you 'reply all') use <a href="#pm-recipients">{exp:messaging:recipients}</a></li>
 <li><dfn>forwarding</dfn> &mdash; If you are forwarding some message, set the value of this parameter to ID of message you're forwarding, e.g. forwarding="143". It will mark the original message in your list as 'forwarded'.</li>
 <li><dfn>save_sent="yes"</dfn> &mdash; Save message copy in 'Sent' folder.</li>
 <li><dfn>hide_cc="yes"</dfn> &mdash; setting this will hide recipients listed in <em>cc</em> field, thus making in fuction as blind copy field (bcc)</li>
@@ -420,6 +421,8 @@ Move selected messages: {folder_select} &lt;input type="submit" name="move" valu
 <li><dfn>message_date format="%Y-%m-%d"</dfn> &mdash; the date when message has been sent. Standard EE date formatting rules apply.</li>
 <li><dfn>delete_url</dfn> &mdash; URL for message deleting</li>
 <li><dfn>delete_link</dfn> &mdash; pre-formatted link to delete message</li>
+<li><dfn>empty_trash_url</dfn> &mdash; URL to empty Trash folder (visible only in Trash folder view)</li>
+<li><dfn>empty_trash_link</dfn> &mdash; pre-formatted link to empty Trash folder (visible only in Trash folder view)</li>
 <li><dfn>folder_select</dfn> &mdash; pre-formatted dropdown select for folders that the message can be moved to. Displayed only if form="yes" parameter is specified.</li>
 <li><dfn>{paginate}{pagination_links}{/paginate}</dfn> &mdash; pagination links (if you have limit parameter set and there's more than one page). You can also use {pagination_links} tag pair, like with <a href="http://ellislab.com/expressionengine/user-guide/modules/channel/pagination_page.html" target="_blank">channel entries pagination</a>.</li>
 </ul>
@@ -660,6 +663,15 @@ Move selected messages: {folder_select} &lt;input type="submit" name="move" valu
 </code>    
 
 <p><strong>{exp:messaging:author}</strong> will return sender's screen name for message defined by <em>message_id</em> parameter.</p>
+
+
+    <h3><a name="pm-recipients" href="#top">&uarr;</a>Message recipients</h3>
+    
+<code>
+{exp:messaging:recipients message_id="{segment_3}"}
+</code>    
+
+<p><strong>{exp:messaging:recipients}</strong> will return comma-separated list of recipient screen names for message defined by <em>message_id</em> parameter.</p>
     
     <h3><a name="pm-folders" href="#top">&uarr;</a>Message folders list</h3>
     

@@ -6,7 +6,7 @@
 -----------------------------------------------------
  http://www.intoeetive.com/
 -----------------------------------------------------
- Copyright (c) 2011-2012 Yuri Salimovskiy
+ Copyright (c) 2012-2013 Yuri Salimovskiy
 =====================================================
  This software is intended for usage with
  ExpressionEngine CMS, version 2.0 or higher

@@ -6,7 +6,7 @@
 -----------------------------------------------------
  http://www.intoeetive.com/
 -----------------------------------------------------
- Copyright (c) 2012 Yuri Salimovskiy
+ Copyright (c) 2012-2013 Yuri Salimovskiy
 =====================================================
  This software is intended for usage with
  ExpressionEngine CMS, version 2.0 or higher
@@ -1227,11 +1227,21 @@ class Messaging {
             echo $this->EE->lang->line('folders_updated');
             exit();
         }
-    
+        
+        $return = ($this->EE->input->get_post('RET')!==false)?$this->EE->input->get_post('RET'):$this->EE->config->item('site_url');
+        $site_name = ($this->EE->config->item('site_name') == '') ? $this->EE->lang->line('back') : stripslashes($this->EE->config->item('site_name'));
+        
+        if ($this->EE->input->get_post('skip_success_message')=='y')
+        {
+        	$this->EE->functions->redirect($return);
+        }
+            
         $data = array(	'title' 	=> $this->EE->lang->line('success'),
         				'heading'	=> $this->EE->lang->line('success'),
         				'content'	=> $this->EE->lang->line('folders_updated'),
-        				'link'		=> array('javascript:history.go(-1)', $this->EE->lang->line('back'))
+        				'redirect'	=> $return,
+        				'link'		=> array($return, $site_name),
+                        'rate'		=> 3
         			 );
 			
 		$this->EE->output->show_message($data);
@@ -1273,12 +1283,12 @@ class Messaging {
     	}
 
     	$messages = array();
-    	$order_by = ($this->EE->TMPL->fetch_param('sort')=='asc')?'asc':'desc';
-    	$this->EE->db->order_by('message_date', 'desc');
+    	$order_by = ($this->EE->TMPL->fetch_param('sort')=='desc')?'desc':'asc';
     	$query = $this->EE->db->select('exp_message_copies.message_id, message_subject')
 					->from('exp_message_copies')
 					->join('exp_message_data', 'exp_message_copies.message_id = exp_message_data.message_id', 'left')
 					->where("message_subject LIKE '%".$this->EE->db->escape_str($subject)."' AND ((exp_message_copies.sender_id=$sender_id AND exp_message_copies.recipient_id=$recipient_id) OR (exp_message_copies.sender_id=$recipient_id AND exp_message_copies.recipient_id=$sender_id))")
+					->order_by('message_date', $order_by)
 					->get();
 
 		foreach ($query->result_array() as $row)
@@ -1321,6 +1331,7 @@ class Messaging {
 					->from('exp_message_copies')
 					->where('recipient_id', $this->EE->session->userdata('member_id'))
 					->where_in('message_id', $messages)
+					->order_by('copy_id', $order_by)
 					->limit($this->perpage, $start)
 					->get();
 							
@@ -2029,9 +2040,23 @@ class Messaging {
                 $return = $this->EE->TMPL->fetch_param('return');
             }
 
-            $tagdata = $this->EE->TMPL->swap_var_single('delete_url', $delete_url.'&message_id='.$row['copy_id'], $tagdata); 
+            $tagdata = $this->EE->TMPL->swap_var_single('delete_url', $delete_url.'&message_id='.$row['copy_id'].'&RET='.$return, $tagdata); 
             $delete_link = '<a href="'.$delete_url.'&message_id='.$row['copy_id'].'&RET='.$return.'" class="pm_delete_link">'.$this->EE->lang->line('messages_delete').'</a>';
             $tagdata = $this->EE->TMPL->swap_var_single('delete_link', $delete_link, $tagdata);   
+            
+            if ($folder_id==0)
+            {
+                $empty_trash_url = $delete_url.'&empty_trash=yes&RET='.$return;
+                $empty_trash_link = '<a href="'.$delete_url.'&empty_trash=yes&RET='.$return.'" class="pm_empty_trash_link">'.$this->EE->lang->line('empty_trash').'</a>';
+                
+            }
+            else
+            {
+                $empty_trash_url = '';
+                $empty_trash_link = '';
+            }
+            $tagdata = $this->EE->TMPL->swap_var_single('empty_trash_url', $empty_trash_url, $tagdata);   
+            $tagdata = $this->EE->TMPL->swap_var_single('empty_trash_link', $empty_trash_link, $tagdata);   
             
             //if message body is displayed we update the status
             if (strpos($tagdata, LD.'message'.RD)!==false && isset($row['message_body']))
@@ -2369,6 +2394,43 @@ class Messaging {
             if ($q->num_rows()>0)
             {
                 return $q->row('screen_name');
+            }
+        }
+    }
+    
+    
+    function recipients()
+    {
+        if ($this->EE->TMPL->fetch_param('message_id')!='')
+        {
+            //get message id
+            $this->EE->db->select('message_id')
+                        ->from('exp_message_copies')
+                        ->where('copy_id', $this->EE->TMPL->fetch_param('message_id'));
+            if ($this->EE->session->userdata('group_id')!=1)
+            {
+                $this->EE->db->where('exp_message_copies.recipient_id', $this->EE->session->userdata('member_id')); //only where I am sender
+            }
+            $q = $this->EE->db->get();
+            if ($q->num_rows()==0) return;
+            
+            $this->EE->db->select('screen_name')
+                        ->from('message_copies')
+                        ->join('members', 'members.member_id=message_copies.recipient_id', 'left')
+                        ->where('recipient_id != ', $this->EE->session->userdata('member_id'))
+                        ->where('recipient_id != sender_id')//exclude self-copy
+                        ->where('message_id', $q->row('message_id'));
+            
+            $q = $this->EE->db->get();
+
+            if ($q->num_rows()>0)
+            {
+                $out = '';
+                foreach ($q->result_array() as $row)
+                {
+                    $out .= $row['screen_name'].', ';
+                }
+                return trim($out, ', ');
             }
         }
     }
@@ -2974,7 +3036,7 @@ class Messaging {
         {
             foreach ($_POST['forward_attachments'] as $forward)
             {
-                $this->attachments = $forward;
+                $this->attachments[] = $forward;
             }
             
             if ( ! class_exists('EE_Messages_send'))
@@ -2982,7 +3044,13 @@ class Messaging {
     			require_once APPPATH.'libraries/Messages_send.php';
     		}
             $MESS_Send = new EE_Messages_send;
+            $MESS_Send->attachments = $this->attachments;
+            $MESS_Send->attach_total = $this->attach_total;
+            $MESS_Send->upload_path = $this->upload_path;
+            $MESS_Send->member_id = $this->EE->session->userdata('member_id');
             $MESS_Send->_duplicate_files();
+            
+            $this->attachments = $MESS_Send->attachments;
         }
         
         //process attachments
@@ -3247,6 +3315,30 @@ class Messaging {
     //delete or move
     function move_pm()
     {
+        if ($this->EE->input->get('empty_trash')=='yes')
+        {
+            $this->EE->db->select('copy_id')
+                    ->from('message_copies')
+                    ->where('recipient_id', $this->EE->session->userdata('member_id'))
+                    ->where('message_deleted', 'y');
+            $q = $this->EE->db->get();
+            if ($q->num_rows()==0)
+            {
+                if ($this->EE->input->get_post('ajax')=='yes')
+                {
+                    echo lang('error').": ".$this->EE->lang->line('trash_empty');
+                    exit();
+                }
+                return $this->EE->output->show_user_error('submission', array($this->EE->lang->line('trash_empty')));
+            }
+            
+            $_POST['message_id'] = array();
+            foreach ($q->result_array() as $row)
+            {
+                $_POST['message_id'][] = $row['copy_id'];
+            }
+        }
+        
         if (empty($_POST['message_id']) && !empty($_GET['message_id']))
         {
             $_POST['message_id'] = array($_GET['message_id']);
@@ -3304,6 +3396,7 @@ class Messaging {
         
         $this->EE->db->select('message_id, copy_id, message_folder, message_deleted')
                     ->from('message_copies')
+                    ->where('recipient_id', $this->EE->session->userdata('member_id'))
                     ->where_in('copy_id', $messages);
         $q = $this->EE->db->get();
         
@@ -3320,6 +3413,7 @@ class Messaging {
             {
                 $data = array('message_folder'=>$this->EE->input->get_post('folder'), 'message_deleted'=>'n');
                 $this->EE->db->where('copy_id', $row['copy_id']);
+                $this->EE->db->where('recipient_id', $this->EE->session->userdata('member_id'));
                 $this->EE->db->update('message_copies', $data);
             }
         }
@@ -3372,7 +3466,7 @@ class Messaging {
 	        $tagdata = $this->EE->TMPL->swap_var_single('messages_total', $count, $tagdata);
         }
         $tagdata = $this->EE->TMPL->swap_var_single('send_limit', $this->EE->session->userdata('prv_msg_send_limit'), $tagdata);
-        $messages_percent = ($this->EE->session->userdata('group_id') == 1) ? 0 : round((100*$this->EE->session->userdata('private_messages')/$this->EE->session->userdata('prv_msg_storage_limit')),2);
+        $messages_percent = ($this->EE->session->userdata('group_id') == 1) ? 0 : round((100*$count/$this->EE->session->userdata('prv_msg_storage_limit')),2);
         $tagdata = $this->EE->TMPL->swap_var_single('messages_percent', $messages_percent, $tagdata);
 		
 		$prefs = array( 'prv_msg_attach_maxsize',
@@ -3547,7 +3641,9 @@ class Messaging {
 
 	function _do_upload($field = 'attachment')
 	{
-		if ( ! class_exists('CI_Upload'))
+		//$this->EE->lang->loadfile('upload');
+        
+        if ( ! class_exists('CI_Upload'))
         {
         	require_once BASEPATH.'libraries/Upload.php';
         }
@@ -3561,8 +3657,8 @@ class Messaging {
        // Is $_FILES[$field] set? If not, no reason to continue.
 		if ( ! isset($_FILES[$field]))
 		{
-			$UP->set_error('upload_no_file_selected');
-			return FALSE;
+			//return $this->EE->output->show_user_error('general', array($this->EE->lang->line('upload_no_file_selected')));
+            return $this->EE->output->show_user_error('general', array(lang('attachment_problem')));
 		}
         
         
@@ -3648,59 +3744,62 @@ class Messaging {
     				default :   $UP->set_error('upload_no_file_selected');
     					break;
     			}
-    
-    			return FALSE;
+                if ($UP->error_msg!='')
+                {
+                    //return $this->EE->output->show_user_error('general', $UP->error_msg);
+                    return $this->EE->output->show_user_error('general', array(lang('attachment_problem')));
+    			}
     		}
     
     
     		// Set the uploaded data as class variables
-    		$this->file_temp = $files[$index]['tmp_name'];
-    		$this->file_size = $files[$index]['size'];
+    		$UP->file_temp = $this->file_temp = $files[$index]['tmp_name'];
+    		$UP->file_size = $this->file_size = $files[$index]['size'];
     		$this->file_type = preg_replace("/^(.+?);.*$/", "\\1", $files[$index]['type']);
-    		$this->file_type = strtolower(trim(stripslashes($this->file_type), '"'));
-    		$this->file_name = $this->_prep_filename($files[$index]['name']);
-    		$this->file_ext	 = $UP->get_extension($this->file_name);
-    		$this->client_name = $UP->file_name;
+    		$UP->file_type = $this->file_type = strtolower(trim(stripslashes($this->file_type), '"'));
+    		$UP->file_name = $this->file_name = $this->_prep_filename($files[$index]['name']);
+    		$UP->file_ext	 = $this->file_ext	 = $UP->get_extension($this->file_name);
+    		$UP->client_name = $this->client_name = $UP->file_name;
     
     		// Is the file type allowed to be uploaded?
     		if ( ! $UP->is_allowed_filetype())
     		{
-    			$UP->set_error('upload_invalid_filetype');
-    			return FALSE;
+    			//return $this->EE->output->show_user_error('general', array($this->EE->lang->line('upload_invalid_filetype')));
+                return $this->EE->output->show_user_error('general', array(lang('attachment_problem')));
     		}
     
     		// Convert the file size to kilobytes
     		if ($this->file_size > 0)
     		{
-    			$this->file_size = round($this->file_size/1024, 2);
+    			$UP->file_size = $this->file_size = round($this->file_size/1024, 2);
     		}
     
     		// Is the file size within the allowed maximum?
     		if ( ! $UP->is_allowed_filesize())
     		{
-    			$UP->set_error('upload_invalid_filesize');
-    			return FALSE;
+    			//return $this->EE->output->show_user_error('general', array($this->EE->lang->line('upload_invalid_filesize')));
+                return $this->EE->output->show_user_error('general', array(lang('attachment_problem')));
     		}
     
     		// Are the image dimensions within the allowed size?
     		// Note: This can fail if the server has an open_basdir restriction.
     		if ( ! $UP->is_allowed_dimensions())
     		{
-    			$UP->set_error('upload_invalid_dimensions');
-    			return FALSE;
+    			//return $this->EE->output->show_user_error('general', array($this->EE->lang->line('upload_invalid_dimensions')));
+                return $this->EE->output->show_user_error('general', array(lang('attachment_problem')));
     		}
     
     		// Sanitize the file name for security
-    		$this->file_name = $UP->clean_file_name($this->file_name);
+    		$UP->file_name = $this->file_name = $UP->clean_file_name($this->file_name);
     
     		// Truncate the file name if it's too long
     		if ($UP->max_filename > 0)
     		{
-    			$this->file_name = $UP->limit_filename_length($this->file_name, $this->max_filename);
+    			$UP->file_name = $this->file_name = $UP->limit_filename_length($this->file_name, $this->max_filename);
     		}
     
     		// Remove white spaces in the name
-   			$this->file_name = preg_replace("/\s+/", "_", $this->file_name);
+   			$UP->file_name = $this->file_name = preg_replace("/\s+/", "_", $this->file_name);
     
     		/*
     		 * Validate the file name
@@ -3708,11 +3807,11 @@ class Messaging {
     		 * the file if one with the same name already exists.
     		 * If it returns false there was a problem.
     		 */
-    		$this->orig_name = $this->file_name;
+    		$UP->orig_name = $this->orig_name = $this->file_name;
     
     		if ($UP->overwrite == FALSE)
     		{
-    			$this->file_name = $UP->set_filename($this->upload_path, $this->file_name);
+    			$UP->file_name = $this->file_name = $UP->set_filename($this->upload_path, $this->file_name);
     
     			if ($this->file_name === FALSE)
     			{
@@ -3730,8 +3829,8 @@ class Messaging {
     		{
     			if ($UP->do_xss_clean() === FALSE)
     			{
-    				$UP->set_error('upload_unable_to_write_file');
-    				return FALSE;
+    				//return $this->EE->output->show_user_error('general', array($this->EE->lang->line('upload_unable_to_write_file')));
+                    return $this->EE->output->show_user_error('general', array(lang('attachment_problem')));
     			}
     		}
     
@@ -3746,8 +3845,8 @@ class Messaging {
     		{
     			if ( ! @move_uploaded_file($this->file_temp, $this->upload_path.$this->file_name))
     			{
-    				$UP->set_error('upload_destination_error');
-    				return FALSE;
+    				//return $this->EE->output->show_user_error('general', array($this->EE->lang->line('upload_destination_error')));
+                    return $this->EE->output->show_user_error('general', array(lang('attachment_problem')));
     			}
     		}
     
