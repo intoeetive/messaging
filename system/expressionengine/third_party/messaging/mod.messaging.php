@@ -181,7 +181,7 @@ class Messaging {
             $out = substr($out, 0, - $backspace);
         }
         
-        $out = $this->_process_pagination($total, $this->perpage, $start, $basepath, $out, $paginate_tagdata);
+        $out = $this->_process_pagination($total, $this->perpage, $start, $basepath, $out, $paginate, $paginate_tagdata);
         
         
         
@@ -617,7 +617,7 @@ class Messaging {
             $output = substr($output, 0, - $backspace);
         }
         
-        $output = $this->_process_pagination($total, $this->perpage, $start, $basepath, $output, $paginate_tagdata);
+        $output = $this->_process_pagination($total, $this->perpage, $start, $basepath, $output, $paginate, $paginate_tagdata);
         
         return $output;
     }
@@ -1257,7 +1257,7 @@ class Messaging {
         }
         
         
-        $out = $this->_process_pagination($total, $this->perpage, $start, $basepath, $out, $paginate_tagdata);
+        $out = $this->_process_pagination($total, $this->perpage, $start, $basepath, $out, $paginate, $paginate_tagdata);
         
     	return $out;
     }
@@ -1583,7 +1583,7 @@ class Messaging {
             $out = substr($out, 0, - $backspace);
         }
         
-        $out = $this->_process_pagination($total, $this->perpage, $start, $basepath, $out, $paginate_tagdata);
+        $out = $this->_process_pagination($total, $this->perpage, $start, $basepath, $out, $paginate, $paginate_tagdata);
 
     	return $out;
     }
@@ -2099,7 +2099,7 @@ class Messaging {
         if ($embedded_mode==false)
         {
         
-        $out = $this->_process_pagination($total, $this->perpage, $start, $basepath, $out, $paginate_tagdata);
+        $out = $this->_process_pagination($total, $this->perpage, $start, $basepath, $out, $paginate, $paginate_tagdata);
     	
     	}
 	        
@@ -3714,7 +3714,7 @@ class Messaging {
     }
     
     
-    function _process_pagination($total, $perpage, $start, $basepath='', $out='', $paginate_tagdata='')
+    function _process_pagination($total, $perpage, $start, $basepath='', $out='', $paginate='bottom', $paginate_tagdata='')
     {
         if ($this->EE->config->item('app_version') >= 240)
 		{
