@@ -70,6 +70,7 @@ class Messaging {
         $this->EE->db->from('exp_member_bulletin_board');
         $this->EE->db->join('exp_members', 'exp_member_bulletin_board.sender_id=exp_members.member_id', 'left');
         $this->EE->db->where('exp_member_bulletin_board.bulletin_group', $this->EE->session->userdata('group_id'));
+        //$this->EE->db->where('(bulletin_group='.$this->EE->session->userdata('group_id').' OR sender_id='.$this->EE->session->userdata('member_id').')');
         if ($this->EE->TMPL->fetch_param('message_id')!='') 
         {
             $this->EE->db->where('exp_member_bulletin_board.bulletin_id', $this->EE->TMPL->fetch_param('message_id'));
@@ -180,62 +181,9 @@ class Messaging {
             $out = substr($out, 0, - $backspace);
         }
         
-        if ($this->EE->config->item('app_version') >= 240)
-		{
-	        $this->EE->load->library('pagination');
-	        if ($this->EE->config->item('app_version') >= 260)
-	        {
-	        	$pagination = $this->EE->pagination->create(__CLASS__);
-	        }
-	        else
-	        {
-	        	$pagination = new Pagination_object(__CLASS__);
-	        }
-	        $pagination->get_template();
-	        $pagination->per_page = $this->perpage;
-	        $pagination->total_rows = $total;
-	        $pagination->offset = $start;
-	        $pagination->build($pagination->per_page);
-	        $out = $pagination->render($out);
-  		}
-  		else
-  		{
+        $out = $this->_process_pagination($total, $this->perpage, $start, $basepath, $out, $paginate_tagdata);
         
-	        if ($total > $this->perpage)
-	        {
-	            $this->EE->load->library('pagination');
-	
-				$config['base_url']		= $basepath;
-				$config['prefix']		= 'P';
-				$config['total_rows'] 	= $total;
-				$config['per_page']		= $this->perpage;
-				$config['cur_page']		= $start;
-				$config['first_link'] 	= $this->EE->lang->line('pag_first_link');
-				$config['last_link'] 	= $this->EE->lang->line('pag_last_link');
-	
-				$this->EE->pagination->initialize($config);
-				$pagination_links = $this->EE->pagination->create_links();	
-	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', $pagination_links, $paginate_tagdata);			
-	        }
-	        else
-	        {
-	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', '', $paginate_tagdata);		
-	        }
-	        
-	        switch ($paginate)
-	        {
-	            case 'top':
-	                $out = $paginate_tagdata.$out;
-	                break;
-	            case 'both':
-	                $out = $paginate_tagdata.$out.$paginate_tagdata;
-	                break;
-	            case 'bottom':
-	            default:
-	                $out = $out.$paginate_tagdata;
-	        }
-	        
-    	}
+        
         
         return $out;
       
@@ -424,7 +372,7 @@ class Messaging {
         $data['sender_id'] = $this->EE->session->userdata('member_id');
         $data['bulletin_date'] = $this->EE->localize->now;
         $data['hash'] = $this->EE->functions->random('alnum', 10);
-        $expires = $this->EE->localize->convert_human_date_to_gmt($_POST['bulletin_expires']);
+        $expires = ($this->EE->config->item('app_version')<260)?$this->EE->localize->convert_human_date_to_gmt($_POST['bulletin_expires']):$this->EE->localize->string_to_timestamp($_POST['bulletin_expires']);
         $data['bulletin_expires'] = ($expires!=0)?$expires:($this->EE->localize->now + 30*24*60*60);
         $data['bulletin_message'] = $this->EE->input->post('message');
         
@@ -669,60 +617,7 @@ class Messaging {
             $output = substr($output, 0, - $backspace);
         }
         
-        if ($this->EE->config->item('app_version') >= 240)
-		{
-	        $this->EE->load->library('pagination');
-	        if ($this->EE->config->item('app_version') >= 260)
-	        {
-	        	$pagination = $this->EE->pagination->create(__CLASS__);
-	        }
-	        else
-	        {
-	        	$pagination = new Pagination_object(__CLASS__);
-	        }
-	        $pagination->get_template();
-	        $pagination->per_page = $this->perpage;
-	        $pagination->total_rows = $total;
-	        $pagination->offset = $start;
-	        $pagination->build($pagination->per_page);
-	        $output = $pagination->render($output);
-  		}
-        else
-        {
-	        if ($total > $this->perpage)
-	        {
-	            $this->EE->load->library('pagination');
-	
-				$config['base_url']		= $basepath;
-				$config['prefix']		= 'P';
-				$config['total_rows'] 	= $total;
-				$config['per_page']		= $this->perpage;
-				$config['cur_page']		= $start;
-				$config['first_link'] 	= $this->EE->lang->line('pag_first_link');
-				$config['last_link'] 	= $this->EE->lang->line('pag_last_link');
-	
-				$this->EE->pagination->initialize($config);
-				$pagination_links = $this->EE->pagination->create_links();	
-	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', $pagination_links, $paginate_tagdata);			
-	        }
-	        else
-	        {
-	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', '', $paginate_tagdata);		
-	        }
-	        
-	        switch ($paginate)
-	        {
-	            case 'top':
-	                $output = $paginate_tagdata.$output;
-	                break;
-	            case 'both':
-	                $output = $paginate_tagdata.$output.$paginate_tagdata;
-	                break;
-	            case 'bottom':
-	            default:
-	                $output = $output.$paginate_tagdata;
-	        }
-    	}
+        $output = $this->_process_pagination($total, $this->perpage, $start, $basepath, $output, $paginate_tagdata);
         
         return $output;
     }
@@ -1362,62 +1257,7 @@ class Messaging {
         }
         
         
-        if ($this->EE->config->item('app_version') >= 240)
-		{
-	        $this->EE->load->library('pagination');
-	        if ($this->EE->config->item('app_version') >= 260)
-	        {
-	        	$pagination = $this->EE->pagination->create(__CLASS__);
-	        }
-	        else
-	        {
-	        	$pagination = new Pagination_object(__CLASS__);
-	        }
-	        $pagination->get_template();
-	        $pagination->per_page = $this->perpage;
-	        $pagination->total_rows = $total;
-	        $pagination->offset = $start;
-	        $pagination->build($pagination->per_page);
-	        $out = $pagination->render($out);
-  		}
-  		else
-  		{
-        
-	        if ($total > $this->perpage)
-	        {
-	            $this->EE->load->library('pagination');
-	
-				$config = array();
-				$config['base_url']		= $basepath;
-				$config['prefix']		= 'P';
-				$config['total_rows'] 	= $total;
-				$config['per_page']		= $this->perpage;
-				$config['cur_page']		= $start;
-				$config['first_link'] 	= $this->EE->lang->line('pag_first_link');
-				$config['last_link'] 	= $this->EE->lang->line('pag_last_link');
-	
-				$this->EE->pagination->initialize($config);
-				$pagination_links = $this->EE->pagination->create_links();	
-	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', $pagination_links, $paginate_tagdata);			
-	        }
-	        else
-	        {
-	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', '', $paginate_tagdata);		
-	        }
-	        
-	        switch ($paginate)
-	        {
-	            case 'top':
-	                $out = $paginate_tagdata.$out;
-	                break;
-	            case 'both':
-	                $out = $paginate_tagdata.$out.$paginate_tagdata;
-	                break;
-	            case 'bottom':
-	            default:
-	                $out = $out.$paginate_tagdata;
-	        }
-    	}
+        $out = $this->_process_pagination($total, $this->perpage, $start, $basepath, $out, $paginate_tagdata);
         
     	return $out;
     }
@@ -1452,6 +1292,8 @@ class Messaging {
 		}
 		
 		$tagdata = $this->EE->TMPL->tagdata;
+        
+        $paginate_tagdata = '';
         
         if ( preg_match_all("/".LD."paginate".RD."(.*?)".LD."\/paginate".RD."/s", $tagdata, $tmp)!=0)
         {
@@ -1574,6 +1416,7 @@ class Messaging {
 			$row_tagdata =  $this->EE->TMPL->swap_var_single('conversation_count', $i, $tagdata);
 			$row_tagdata =  $this->EE->TMPL->swap_var_single('conversation_absolute_count', $start+$i, $row_tagdata);
 			$row_tagdata =  $this->EE->TMPL->swap_var_single('conversation_total_results', $total, $row_tagdata);
+            $row_tagdata =  $this->EE->TMPL->swap_var_single('total_results', count($conversations), $row_tagdata);
 			$row_tagdata =  $this->EE->TMPL->swap_var_single('subject', $conversations_data[$message_id]['message_subject'], $row_tagdata);
 			$query = $this->EE->db->select('exp_message_copies.message_status, exp_message_copies.message_id, exp_message_copies.message_received, exp_message_copies.message_read, exp_message_copies.copy_id,  exp_message_data.sender_id,  exp_message_data.message_date,  exp_message_data.message_subject, exp_message_data.message_body, exp_message_data.message_recipients, exp_message_data.message_cc, exp_message_data.message_attachments, sender.screen_name AS sender_screen_name, sender.username AS sender_username, sender.email AS sender_email, sender.avatar_filename AS sender_avatar_filename, sender.photo_filename AS sender_photo_filename, recipient.member_id AS recipient_member_id, recipient.screen_name AS recipient_screen_name, recipient.username AS recipient_username, recipient.email AS recipient_email, recipient.avatar_filename AS recipient_avatar_filename, recipient.photo_filename AS recipient_photo_filename')
 					->from('exp_message_copies')
@@ -1740,62 +1583,7 @@ class Messaging {
             $out = substr($out, 0, - $backspace);
         }
         
-        if ($this->EE->config->item('app_version') >= 240)
-		{
-	        $this->EE->load->library('pagination');
-	        if ($this->EE->config->item('app_version') >= 260)
-	        {
-	        	$pagination = $this->EE->pagination->create(__CLASS__);
-	        }
-	        else
-	        {
-	        	$pagination = new Pagination_object(__CLASS__);
-	        }
-	        $pagination->get_template();
-	        $pagination->per_page = $this->perpage;
-	        $pagination->total_rows = $total;
-	        $pagination->offset = $start;
-	        $pagination->build($pagination->per_page);
-	        $out = $pagination->render($out);
-  		}
-  		else
-  		{
-
-	        if ($total > $this->perpage)
-	        {
-	            $this->EE->load->library('pagination');
-	
-				$config['base_url']		= $basepath;
-				$config['prefix']		= 'P';
-				$config['total_rows'] 	= $total;
-				$config['per_page']		= $this->perpage;
-				$config['cur_page']		= $start;
-				$config['first_link'] 	= $this->EE->lang->line('pag_first_link');
-				$config['last_link'] 	= $this->EE->lang->line('pag_last_link');
-	
-				$this->EE->pagination->initialize($config);
-				$pagination_links = $this->EE->pagination->create_links();	
-	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', $pagination_links, $paginate_tagdata);			
-	        }
-	        else
-	        {
-	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', '', $paginate_tagdata);		
-	        }
-	        
-	        switch ($paginate)
-	        {
-	            case 'top':
-	                $out = $paginate_tagdata.$out;
-	                break;
-	            case 'both':
-	                $out = $paginate_tagdata.$out.$paginate_tagdata;
-	                break;
-	            case 'bottom':
-	            default:
-	                $out = $out.$paginate_tagdata;
-	        }
-	        
-    	}
+        $out = $this->_process_pagination($total, $this->perpage, $start, $basepath, $out, $paginate_tagdata);
 
     	return $out;
     }
@@ -2311,61 +2099,7 @@ class Messaging {
         if ($embedded_mode==false)
         {
         
-        if ($this->EE->config->item('app_version') >= 240)
-		{
-	        $this->EE->load->library('pagination');
-	        if ($this->EE->config->item('app_version') >= 260)
-	        {
-	        	$pagination = $this->EE->pagination->create(__CLASS__);
-	        }
-	        else
-	        {
-	        	$pagination = new Pagination_object(__CLASS__);
-	        }
-	        $pagination->get_template();
-	        $pagination->per_page = $this->perpage;
-	        $pagination->total_rows = $total;
-	        $pagination->offset = $start;
-	        $pagination->build($pagination->per_page);
-	        $out = $pagination->render($out);
-  		}
-  		else
-  		{
-        
-	        if ($total > $this->perpage)
-	        {
-	            $this->EE->load->library('pagination');
-	
-				$config['base_url']		= $basepath;
-				$config['prefix']		= 'P';
-				$config['total_rows'] 	= $total;
-				$config['per_page']		= $this->perpage;
-				$config['cur_page']		= $start;
-				$config['first_link'] 	= $this->EE->lang->line('pag_first_link');
-				$config['last_link'] 	= $this->EE->lang->line('pag_last_link');
-	
-				$this->EE->pagination->initialize($config);
-				$pagination_links = $this->EE->pagination->create_links();	
-	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', $pagination_links, $paginate_tagdata);			
-	        }
-	        else
-	        {
-	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', '', $paginate_tagdata);		
-	        }
-	        
-	        switch ($paginate)
-	        {
-	            case 'top':
-	                $out = $paginate_tagdata.$out;
-	                break;
-	            case 'both':
-	                $out = $paginate_tagdata.$out.$paginate_tagdata;
-	                break;
-	            case 'bottom':
-	            default:
-	                $out = $out.$paginate_tagdata;
-	        }
-    	}
+        $out = $this->_process_pagination($total, $this->perpage, $start, $basepath, $out, $paginate_tagdata);
     	
     	}
 	        
@@ -2804,6 +2538,8 @@ class Messaging {
         $_SESSION['messaging']['subject'] = $this->EE->input->post('subject');
         $_SESSION['messaging']['message'] = $this->EE->input->post('message');
     		
+        if ($this->EE->config->item('app_version')<270)
+        {
         if ($this->EE->security->check_xid($this->EE->input->post('XID')) == FALSE)
 		{
 			if ($this->EE->input->get_post('ajax')=='yes')
@@ -2813,6 +2549,7 @@ class Messaging {
             }
             return $this->EE->output->show_user_error('submission', array($this->EE->lang->line('not_authorized')));
 		}
+        }
         
         $warning = array();
         
@@ -3458,16 +3195,17 @@ class Messaging {
         $storage_limit	= ($this->EE->session->userdata('group_id') == 1) ? '&#8734;' : $this->EE->session->userdata('prv_msg_storage_limit');
         $tagdata = $this->EE->TMPL->swap_var_single('messages_limit', $storage_limit, $tagdata);
         $tagdata = $this->EE->TMPL->swap_var_single('messages_unread', $this->EE->session->userdata('private_messages'), $tagdata);
-        if (strpos($tagdata, LD.'messages_total'.RD)!==false)
+        if (strpos($tagdata, LD.'messages_total'.RD)!==false || strpos($tagdata, LD.'messages_percent'.RD)!==false)
         {
         	$this->EE->db->from('message_copies');
 	        $this->EE->db->where('recipient_id', $this->EE->session->userdata('member_id'));
 	        $count = $this->EE->db->count_all_results(); 
 	        $tagdata = $this->EE->TMPL->swap_var_single('messages_total', $count, $tagdata);
+            
+            $messages_percent = ($this->EE->session->userdata('group_id') == 1) ? 0 : round((100*$count/$this->EE->session->userdata('prv_msg_storage_limit')),2);
+            $tagdata = $this->EE->TMPL->swap_var_single('messages_percent', $messages_percent, $tagdata);
         }
         $tagdata = $this->EE->TMPL->swap_var_single('send_limit', $this->EE->session->userdata('prv_msg_send_limit'), $tagdata);
-        $messages_percent = ($this->EE->session->userdata('group_id') == 1) ? 0 : round((100*$count/$this->EE->session->userdata('prv_msg_storage_limit')),2);
-        $tagdata = $this->EE->TMPL->swap_var_single('messages_percent', $messages_percent, $tagdata);
 		
 		$prefs = array( 'prv_msg_attach_maxsize',
 						'prv_msg_attach_total',
@@ -3973,6 +3711,78 @@ class Messaging {
 		{
 			return $this->EE->localize->decode_date($one, $two, $three);
 		}
+    }
+    
+    
+    function _process_pagination($total, $perpage, $start, $basepath='', $out='', $paginate_tagdata='')
+    {
+        if ($this->EE->config->item('app_version') >= 240)
+		{
+	        $this->EE->load->library('pagination');
+	        if ($this->EE->config->item('app_version') >= 260)
+	        {
+	        	$pagination = $this->EE->pagination->create(__CLASS__);
+	        }
+	        else
+	        {
+	        	$pagination = new Pagination_object(__CLASS__);
+	        }
+            if ($this->EE->config->item('app_version') >= 280)
+            {
+                $this->EE->TMPL->tagdata = $pagination->prepare($this->EE->TMPL->tagdata);
+                $pagination->build($total, $perpage);
+            }
+            else
+            {
+                $pagination->get_template();
+    	        $pagination->per_page = $perpage;
+    	        $pagination->total_rows = $total;
+    	        $pagination->offset = $start;
+    	        $pagination->build($pagination->per_page);
+            }
+	        
+	        $out = $pagination->render($out);
+  		}
+  		else
+  		{
+        
+	        if ($total > $perpage)
+	        {
+	            $this->EE->load->library('pagination');
+	
+				$config['base_url']		= $basepath;
+				$config['prefix']		= 'P';
+				$config['total_rows'] 	= $total;
+				$config['per_page']		= $perpage;
+				$config['cur_page']		= $start;
+				$config['first_link'] 	= $this->EE->lang->line('pag_first_link');
+				$config['last_link'] 	= $this->EE->lang->line('pag_last_link');
+	
+				$this->EE->pagination->initialize($config);
+				$pagination_links = $this->EE->pagination->create_links();	
+	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', $pagination_links, $paginate_tagdata);			
+	        }
+	        else
+	        {
+	            $paginate_tagdata = $this->EE->TMPL->swap_var_single('pagination_links', '', $paginate_tagdata);		
+	        }
+	        
+	        switch ($paginate)
+	        {
+	            case 'top':
+	                $out = $paginate_tagdata.$out;
+	                break;
+	            case 'both':
+	                $out = $paginate_tagdata.$out.$paginate_tagdata;
+	                break;
+	            case 'bottom':
+	            default:
+	                $out = $out.$paginate_tagdata;
+	        }
+	        
+    	}
+        
+        return $out;
     }
 
 
