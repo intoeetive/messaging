@@ -2579,7 +2579,6 @@ class Messaging {
 		}
 
 		$recipients = $MESS->convert_recipients($this->EE->input->get_post('recipients'), 'array', 'member_id');
-		
 
 		$cc = (trim($this->EE->input->get_post('cc')) == '') ? array() : $MESS->convert_recipients($this->EE->input->get_post('cc'), 'array', 'member_id');
 		
@@ -2688,7 +2687,6 @@ class Messaging {
 		/*  because of an overflow we make the message a 
 		/*  preview and will send a message to the sender.
 		/* -------------------------------------*/
-		
 		if (count($details['overflow_recipients']) > 0 OR count($details['overflow_cc']) > 0)
 		{
 			sort($recipients);
@@ -2762,6 +2760,12 @@ class Messaging {
         $_SESSION['messaging']['warning'] = $warning;
         if (!empty($warning))
         {
+            if ($this->EE->input->get_post('ajax')=='yes')
+            {
+                echo lang('error').": ";
+                foreach ($warning as $w) echo $w;
+                exit();
+            }
             return $this->EE->functions->redirect($_POST['PRV']);
         }
         
@@ -2820,6 +2824,12 @@ class Messaging {
                 $_SESSION['messaging']['warning'] = $warning;
                 if (!empty($warning))
                 {
+                    if ($this->EE->input->get_post('ajax')=='yes')
+                    {
+                        echo lang('error').": ";
+                        foreach ($warning as $w) echo $w;
+                        exit();
+                    }
                     return $this->EE->functions->redirect($_POST['PRV']);
                 }
                 
