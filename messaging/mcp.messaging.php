@@ -6,7 +6,7 @@
 -----------------------------------------------------
  http://www.intoeetive.com/
 -----------------------------------------------------
- Copyright (c) 2012-2013 Yuri Salimovskiy
+ Copyright (c) 2012-2016 Yuri Salimovskiy
 =====================================================
  This software is intended for usage with
  ExpressionEngine CMS, version 2.0 or higher
@@ -33,8 +33,7 @@ class Messaging_mcp {
     var $docs_url = "http://www.intoeetive.com/docs/messaging.html";
     
     function __construct() { 
-        // Make a local reference to the ExpressionEngine super object 
-        $this->EE =& get_instance(); 
+
     } 
     
     function index()
