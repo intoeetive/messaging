@@ -6,7 +6,7 @@
 -----------------------------------------------------
  http://www.intoeetive.com/
 -----------------------------------------------------
- Copyright (c) 2012-2016 Yuri Salimovskiy
+ Copyright (c) 2012-2021 Yuri Salimovskiy
 =====================================================
  This software is intended for usage with
  ExpressionEngine CMS, version 2.0 or higher
@@ -84,8 +84,9 @@ class Messaging_upd {
         ee()->db->select('module_id'); 
         $query = ee()->db->get_where('modules', array('module_name' => 'Messaging')); 
         
+        $module_member_groups_table = version_compare(APP_VER, '6.0', '>=') ? 'module_member_roles' : 'module_member_groups';
         ee()->db->where('module_id', $query->row('module_id')); 
-        ee()->db->delete('module_member_groups'); 
+        ee()->db->delete($module_member_groups_table); 
         
         ee()->db->where('module_name', 'Messaging'); 
         ee()->db->delete('modules'); 

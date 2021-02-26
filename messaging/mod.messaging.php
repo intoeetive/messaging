@@ -6,7 +6,7 @@
 -----------------------------------------------------
  http://www.intoeetive.com/
 -----------------------------------------------------
- Copyright (c) 2012-2016 Yuri Salimovskiy
+ Copyright (c) 2012-2021 Yuri Salimovskiy
 =====================================================
  This software is intended for usage with
  ExpressionEngine CMS, version 2.0 or higher
@@ -268,13 +268,27 @@ class Messaging {
             $recipients_tagdata_orig = $tmp[3][0];
             $recipients_out = '';
 
-            ee()->db->select('group_id, group_title');
-            ee()->db->where('site_id', ee()->config->item('site_id'));
-            ee()->db->where('include_in_memberlist', 'y');
-            ee()->db->where_not_in('group_id', array(2,3,4));
-            $q = ee()->db->get('member_groups');
-            $result = $q->result_array();
-            $all_groups = array('group_id'=>0, 'group_title'=>ee()->lang->line('mbr_all_member_groups'));
+            if (version_compare(APP_VER, '6.0', '>=')) {
+                $role_settings = ee('Model')->get('RoleSetting')
+                    ->with('Role')
+                    ->filter('include_in_memberlist', 'y')
+                    ->filter('Role.role_id', 'NOT IN', [2,3,4])
+                    ->filter('site_id', ee()->config->item('site_id'))
+                    ->order('Role.name')
+                    ->all();
+                $result = [];
+                foreach ($role_settings as $role_setting) {
+                    $result[] = ['group_id' => $role_setting->Role->getId(), 'group_title' => $role_setting->Role->name];
+                }
+            } else {
+                ee()->db->select('group_id, group_title');
+                ee()->db->where('site_id', ee()->config->item('site_id'));
+                ee()->db->where('include_in_memberlist', 'y');
+                ee()->db->where_not_in('group_id', array(2,3,4));
+                $q = ee()->db->get('member_groups');
+                $result = $q->result_array();
+            }
+			$all_groups = array('group_id'=>0, 'group_title'=>ee()->lang->line('mbr_all_member_groups'));
             array_unshift($result, $all_groups);
             
             foreach ($result as $row)
@@ -289,7 +303,7 @@ class Messaging {
             
             $backspace_var = $tmp[2][0];
             $recipients_out = trim($recipients_out);
-            $recipients_out	= substr($recipients_out, 0, strlen($recipients_out)-$backspace_var);
+            $recipients_out	= substr($recipients_out, 0, strlen($recipients_out) - (int) $backspace_var);
             
             $tagdata = str_replace($tmp[0][0], $recipients_out, $tagdata);
         }
@@ -312,18 +326,32 @@ class Messaging {
             }
             return ee()->output->show_user_error('general', array(ee()->lang->line('not_authorized')));
         }
-        
-        ee()->db->select('group_id');
-        ee()->db->where('include_in_memberlist', 'y');
-        ee()->db->where_not_in('group_id', array(2,3,4));
-        $q = ee()->db->get('member_groups');
-        
+
         $recipients = array();
         $valid_recipients = array();
-        foreach ($q->result_array() as $row)
-        {
-            $valid_recipients[] = $row['group_id'];
-        } 
+        
+        if (version_compare(APP_VER, '6.0', '>=')) {
+            $role_settings = ee('Model')->get('RoleSetting')
+                ->with('Role')
+                ->filter('include_in_memberlist', 'y')
+                ->filter('Role.role_id', 'NOT IN', [2,3,4])
+                ->filter('site_id', ee()->config->item('site_id'))
+                ->order('Role.name')
+                ->all();
+            foreach ($role_settings as $role_setting) {
+                $valid_recipients[] = $role_setting->Role->getId();
+            }
+        } else {
+            ee()->db->select('group_id');
+            ee()->db->where('include_in_memberlist', 'y');
+            ee()->db->where_not_in('group_id', array(2,3,4));
+            $q = ee()->db->get('member_groups');
+            foreach ($q->result_array() as $row)
+            {
+                $valid_recipients[] = $row['group_id'];
+            } 
+        }
+        
         if (!is_array($_POST['recipients'])) $_POST['recipients'] = array($_POST['recipients']);
         foreach ($_POST['recipients'] as $recipient)
         {
@@ -374,7 +402,10 @@ class Messaging {
         $data['sender_id'] = ee()->session->userdata('member_id');
         $data['bulletin_date'] = ee()->localize->now;
         $data['hash'] = ee()->functions->random('alnum', 10);
-        $expires = (version_compare(APP_VER, '2.6.0', '<'))?ee()->localize->convert_human_date_to_gmt($_POST['bulletin_expires']):ee()->localize->string_to_timestamp($_POST['bulletin_expires']);
+		$expires = 0;
+		if (ee()->input->post('bulletin_expires') != '') {
+        	$expires = (version_compare(APP_VER, '2.6.0', '<'))?ee()->localize->convert_human_date_to_gmt(ee()->input->post('bulletin_expires')):ee()->localize->string_to_timestamp(ee()->input->post('bulletin_expires'));
+		}
         $data['bulletin_expires'] = ($expires!=0)?$expires:(ee()->localize->now + 30*24*60*60);
         $data['bulletin_message'] = ee()->input->post('message');
         
@@ -384,7 +415,7 @@ class Messaging {
 			
 			ee()->db->insert('member_bulletin_board', $data);
             
-            ee()->db->update('members', array('last_bulletin_date'=>ee()->localize->now), array('group_id'=>$group_id));
+            ee()->db->update('members', array('last_bulletin_date'=>ee()->localize->now), array((version_compare(APP_VER, '6.0', '>=') ? 'role_id' : 'group_id')=>$group_id));
             
 		}
 		
@@ -1571,7 +1602,7 @@ class Messaging {
 			if (isset($conversation_out))
 			{
 				$conversation_out = trim($conversation_out);
-	            $conversation_out	= substr($conversation_out, 0, strlen($conversation_out)-$backspace_var);
+	            $conversation_out	= substr($conversation_out, 0, strlen($conversation_out) - (int) $backspace_var);
 	            
 	            $row_tagdata = str_replace($tmp[0][0], $conversation_out, $row_tagdata);
     		}
@@ -1925,7 +1956,7 @@ class Messaging {
                 
                 $backspace_var = $tmp[2][0];
                 $attachments_out = trim($attachments_out);
-                $attachments_out	= substr($attachments_out, 0, strlen($attachments_out)-$backspace_var);
+                $attachments_out	= substr($attachments_out, 0, strlen($attachments_out) - (int) $backspace_var);
                 
                 $tagdata = str_replace($tmp[0][0], $attachments_out, $tagdata);
             }
@@ -1987,7 +2018,7 @@ class Messaging {
 	                
 	                $backspace_var = $tmp[2][$j];
 	                $recipients_out = trim($recipients_out);
-	                $recipients_out	= substr($recipients_out, 0, strlen($recipients_out)-$backspace_var);
+	                $recipients_out	= substr($recipients_out, 0, strlen($recipients_out) - (int) $backspace_var);
 	                
 	                $tagdata = str_replace($tmp[0][$j], $recipients_out, $tagdata);
  				}
@@ -2046,7 +2077,7 @@ class Messaging {
 	                
 	                $backspace_var = $tmp[2][$j];
 	                $recipients_out = trim($recipients_out);
-	                $recipients_out	= substr($recipients_out, 0, strlen($recipients_out)-$backspace_var);
+	                $recipients_out	= substr($recipients_out, 0, strlen($recipients_out) - (int) $backspace_var);
 	                
 	                $tagdata = str_replace($tmp[0][$j], $recipients_out, $tagdata);
        			}
@@ -2396,7 +2427,7 @@ class Messaging {
             
             $backspace_var = $tmp[2][0];
             $attachments_out = trim($attachments_out);
-            $attachments_out	= substr($attachments_out, 0, strlen($attachments_out)-$backspace_var);
+            $attachments_out	= substr($attachments_out, 0, strlen($attachments_out) - (int) $backspace_var);
             
             $tagdata = str_replace($tmp[0][0], $attachments_out, $tagdata);
         }
@@ -2703,12 +2734,19 @@ class Messaging {
 			/*  inbox to these users, load names
 			/*  for error message
 			/* -------------------------------------*/
-			
-			$query = ee()->db->query("SELECT exp_members.screen_name, exp_members.email, exp_members.accept_messages, exp_member_groups.prv_msg_storage_limit
-								 FROM exp_members
-								 LEFT JOIN exp_member_groups ON exp_member_groups.group_id = exp_members.group_id
-								 WHERE exp_members.member_id IN ('".implode("','",array_merge($details['overflow_recipients'], $details['overflow_cc']))."')
-								 AND exp_member_groups.site_id = '".ee()->db->escape_str(ee()->config->item('site_id'))."'");
+			if (version_compare(APP_VER, '6.0', '>=')) {
+				$query = ee()->db->query("SELECT exp_members.screen_name, exp_members.email, exp_members.accept_messages, exp_role_settings.prv_msg_storage_limit
+					FROM exp_members
+					LEFT JOIN exp_role_settings ON exp_role_settings.role_id = exp_members.role_id
+					WHERE exp_members.member_id IN ('".implode("','",array_merge($details['overflow_recipients'], $details['overflow_cc']))."')
+					AND exp_role_settings.site_id = '".ee()->db->escape_str(ee()->config->item('site_id'))."'");
+			} else {
+				$query = ee()->db->query("SELECT exp_members.screen_name, exp_members.email, exp_members.accept_messages, exp_member_groups.prv_msg_storage_limit
+					FROM exp_members
+					LEFT JOIN exp_member_groups ON exp_member_groups.group_id = exp_members.group_id
+					WHERE exp_members.member_id IN ('".implode("','",array_merge($details['overflow_recipients'], $details['overflow_cc']))."')
+					AND exp_member_groups.site_id = '".ee()->db->escape_str(ee()->config->item('site_id'))."'");
+			}
 			
 			if ($query->num_rows() > 0)
 			{
